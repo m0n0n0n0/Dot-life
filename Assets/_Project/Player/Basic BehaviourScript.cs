@@ -10,6 +10,8 @@ public class BasicBehaviourScript : MonoBehaviour
     public float doublePressThreshold = 0.25f;
     public float rotateError = 1.0f;
     public float moveError = 0.05f;
+    public float walkSpeed = 2.0f;
+    public float rollSpeed = 4.0f;
 
     public Vector3 endPos;
     public Quaternion endRot;
@@ -25,7 +27,7 @@ public class BasicBehaviourScript : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
-        animator.applyRootMotion = true;
+        animator.applyRootMotion = false;
     }
 
     void Update()
@@ -132,10 +134,13 @@ public class BasicBehaviourScript : MonoBehaviour
         animator.SetBool("isRolling", isRolling);
         animator.SetBool("isWalking", !isRolling);
 
+        float currentSpeed = isRolling ? rollSpeed : walkSpeed;
         while (Vector3.Distance(transform.position, endPos) > moveError)
         {
+            transform.position = Vector3.MoveTowards(transform.position, endPos, currentSpeed * Time.deltaTime);
             yield return null;
         }
+        //transform.position = endPos;
 
         if (!isRolling)
         {
