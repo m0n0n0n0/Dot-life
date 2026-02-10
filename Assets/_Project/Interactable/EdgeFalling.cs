@@ -1,35 +1,30 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InteractableSugar : MonoBehaviour
+public class EdgeFalling : MonoBehaviour
 {
-    public GameObject interactHint;
+    public event Action OnInteract;
+    public event Action<Vector3> OnEdgeFalling;
 
     public bool playerInRange = false;
+    public Vector3 endPoint = Vector3.zero;
 
     void Start()
     {
-        if (interactHint != null)
-            interactHint.SetActive(false);
+
     }
 
     void OnTriggerEnter(Collider other)
     {
         playerInRange = true;
-        if (interactHint != null)
-        {
-            interactHint.SetActive(true);
-        }
+        OnInteract?.Invoke();
     }
 
     void OnTriggerExit(Collider other)
     {
         playerInRange = false;
-        if (interactHint != null)
-        {
-            interactHint.SetActive(false);
-        }
     }
 
     void Update()
@@ -43,5 +38,6 @@ public class InteractableSugar : MonoBehaviour
     void Interact()
     {
         Debug.Log("Interact with " + gameObject.name);
+        OnEdgeFalling?.Invoke(endPoint);
     }
 }
