@@ -1012,6 +1012,7 @@ GameObject:
   - component: {fileID: 406059454}
   - component: {fileID: 406059453}
   - component: {fileID: 406059452}
+  - component: {fileID: 406059455}
   m_Layer: 0
   m_Name: edge_trigger_diary2
   m_TagString: Untagged
@@ -1032,7 +1033,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInRange: 0
-  endPoint: {x: 9.52, y: 9.03, z: 1.04}
+  endPoint: {x: 9.52, y: 9.03, z: -1}
 --- !u!65 &406059453
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1069,6 +1070,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 83.19, z: 0}
+--- !u!65 &406059455
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 406059451}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 5, z: 15}
+  m_Center: {x: -0.8, y: 0, z: 0}
 --- !u!1 &420994306 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2119854863851734233, guid: 50f086c62f719be42bb83899aa0e0e37, type: 3}
@@ -2441,8 +2463,10 @@ MonoBehaviour:
   - {fileID: 1846850740}
   - {fileID: 406059452}
   - {fileID: 1590057414}
-  jumpHeight: 2
-  fallDuration: 1
+  jumpHeight: 5
+  fallDuration: 2
+  landDuration: 1
+  bias: 0.05
 --- !u!114 &1046924410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2457,8 +2481,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camera: {fileID: 963194227}
   target: {fileID: 1046924408}
-  distance: 5
-  height: 5
+  distance: -4
+  height: 8
   rotationDamping: 3
 --- !u!114 &1046924411
 MonoBehaviour:
@@ -2472,7 +2496,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 178ca14006f38d5458aed60a2b20aa89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitLength: 2
+  unitLength: 0.8
   rotateSpeed: 500
   doublePressThreshold: 0.25
   rotateError: 1
@@ -3758,6 +3782,9 @@ GameObject:
   - component: {fileID: 1590057416}
   - component: {fileID: 1590057415}
   - component: {fileID: 1590057414}
+  - component: {fileID: 1590057419}
+  - component: {fileID: 1590057418}
+  - component: {fileID: 1590057417}
   m_Layer: 0
   m_Name: edge_trigger_sugarbox
   m_TagString: Untagged
@@ -3815,6 +3842,69 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 2.12, z: 0}
+--- !u!65 &1590057417
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590057413}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4, y: 3, z: 1}
+  m_Center: {x: 0, y: 0, z: 3}
+--- !u!65 &1590057418
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590057413}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 3, z: 6}
+  m_Center: {x: -2, y: 0, z: 0}
+--- !u!65 &1590057419
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590057413}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 3, z: 6}
+  m_Center: {x: 2, y: 0, z: 0}
 --- !u!1001 &1590325288
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4820,6 +4910,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1846850742}
   - component: {fileID: 1846850741}
+  - component: {fileID: 1846850743}
   - component: {fileID: 1846850740}
   m_Layer: 0
   m_Name: edge_trigger_diary1
@@ -4878,6 +4969,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -10.332, z: 0}
+--- !u!65 &1846850743
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1846850739}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 3, z: 12}
+  m_Center: {x: -0.9, y: 0, z: 0}
 --- !u!1001 &1859203483
 PrefabInstance:
   m_ObjectHideFlags: 0

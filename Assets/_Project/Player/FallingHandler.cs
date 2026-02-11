@@ -11,6 +11,7 @@ public class FallingHandler : MonoBehaviour
     public float jumpHeight = 2.0f;
     public float fallDuration = 4.0f; 
     public float landDuration = 1.0f;
+    public float bias = 0.05f;
 
     private Animator animator;
     private Coroutine fallingCoroutine;
@@ -39,7 +40,7 @@ public class FallingHandler : MonoBehaviour
     {
         animator.SetBool("isFalling", true);
 
-        Vector3 startPos = transform.position;
+        Vector3 startPos = transform.position + Vector3.up * bias;
         Vector3 peakPos = (startPos + endPos) / 2f + Vector3.up * jumpHeight;
 
         float timeElapsed = 0f;

@@ -35,10 +35,10 @@ public class BasicBehaviourScript : MonoBehaviour
         if (animator.GetBool("isRolling"))
         {
             Vector3 oppositeDirection = Vector3.zero;
-            if (Input.GetKeyDown(KeyCode.S) && lastMoveDirection == Vector3.forward) oppositeDirection = Vector3.back;
-            else if (Input.GetKeyDown(KeyCode.W) && lastMoveDirection == Vector3.back) oppositeDirection = Vector3.forward;
-            else if (Input.GetKeyDown(KeyCode.D) && lastMoveDirection == Vector3.left) oppositeDirection = Vector3.right;
-            else if (Input.GetKeyDown(KeyCode.A) && lastMoveDirection == Vector3.right) oppositeDirection = Vector3.left;
+            if (Input.GetKeyDown(KeyCode.W) && lastMoveDirection == Vector3.forward) oppositeDirection = Vector3.back;
+            else if (Input.GetKeyDown(KeyCode.S) && lastMoveDirection == Vector3.back) oppositeDirection = Vector3.forward;
+            else if (Input.GetKeyDown(KeyCode.A) && lastMoveDirection == Vector3.left) oppositeDirection = Vector3.right;
+            else if (Input.GetKeyDown(KeyCode.D) && lastMoveDirection == Vector3.right) oppositeDirection = Vector3.left;
 
             if (oppositeDirection != Vector3.zero)
             {
@@ -55,19 +55,19 @@ public class BasicBehaviourScript : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.W))
         {
-            HandleInput(KeyCode.W, Vector3.forward, ref lastPressTimeW);
+            HandleInput(KeyCode.W, Vector3.back, ref lastPressTimeW);
         }
         else if (Input.GetKeyDown(KeyCode.S))
         {
-            HandleInput(KeyCode.S, Vector3.back, ref lastPressTimeS);
+            HandleInput(KeyCode.S, Vector3.forward, ref lastPressTimeS);
         }
         else if (Input.GetKeyDown(KeyCode.A))
         {
-            HandleInput(KeyCode.A, Vector3.left, ref lastPressTimeA);
+            HandleInput(KeyCode.A, Vector3.right, ref lastPressTimeA);
         }
         else if (Input.GetKeyDown(KeyCode.D))
         {
-            HandleInput(KeyCode.D, Vector3.right, ref lastPressTimeD);
+            HandleInput(KeyCode.D, Vector3.left, ref lastPressTimeD);
         }
     }
 
@@ -134,10 +134,13 @@ public class BasicBehaviourScript : MonoBehaviour
         animator.SetBool("isRolling", isRolling);
         animator.SetBool("isWalking", !isRolling);
 
+        float timeElapsed = 0f;
         float currentSpeed = isRolling ? rollSpeed : walkSpeed;
-        while (Vector3.Distance(transform.position, endPos) > moveError)
+        float duration = unitLength / currentSpeed;
+        while (timeElapsed < duration)
         {
             transform.position = Vector3.MoveTowards(transform.position, endPos, currentSpeed * Time.deltaTime);
+            timeElapsed += Time.deltaTime;
             yield return null;
         }
         //transform.position = endPos;
