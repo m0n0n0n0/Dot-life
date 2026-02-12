@@ -29,8 +29,6 @@ public class TransitionHandler : MonoBehaviour
 
     void StartTransition (string s)
     {
-        Debug.Log("YuwenReceived");
-
         if (animationCoroutine != null)
         {
             StopCoroutine(animationCoroutine);
