@@ -7,22 +7,19 @@ public class BasicBehaviourScript : MonoBehaviour
 {
     public float unitLength = 3.0f; 
     public float rotateSpeed = 500.0f;
-    public float doublePressThreshold = 0.25f;
     public float rotateError = 1.0f;
     public float moveError = 0.05f;
     public float walkSpeed = 2.0f;
-    public float rollSpeed = 4.0f;
 
     public Vector3 endPos;
     public Quaternion endRot;
 
     private Animator animator;
     private bool isMoving = false;
-    private float lastPressTimeW, lastPressTimeA, lastPressTimeS, lastPressTimeD;
     private Vector3 lastMoveDirection = Vector3.zero;
+    private Vector3? cachedDirection = null;
 
-    private Coroutine inputHandlingCoroutine;
-    private KeyCode lastKeyCode = KeyCode.None;
+    private float movePercent = 0f;
 
     void Start()
     {
@@ -32,124 +29,90 @@ public class BasicBehaviourScript : MonoBehaviour
 
     void Update()
     {
-        if (animator.GetBool("isRolling"))
-        {
-            Vector3 oppositeDirection = Vector3.zero;
-            if (Input.GetKeyDown(KeyCode.W) && lastMoveDirection == Vector3.forward) oppositeDirection = Vector3.back;
-            else if (Input.GetKeyDown(KeyCode.S) && lastMoveDirection == Vector3.back) oppositeDirection = Vector3.forward;
-            else if (Input.GetKeyDown(KeyCode.A) && lastMoveDirection == Vector3.left) oppositeDirection = Vector3.right;
-            else if (Input.GetKeyDown(KeyCode.D) && lastMoveDirection == Vector3.right) oppositeDirection = Vector3.left;
+        HandleInput();
+    }
 
-            if (oppositeDirection != Vector3.zero)
+    void HandleInput()
+    {
+        Vector3? direction = null;
+        if (Input.GetKeyDown(KeyCode.W)) direction = Vector3.back;
+        else if (Input.GetKeyDown(KeyCode.S)) direction = Vector3.forward;
+        else if (Input.GetKeyDown(KeyCode.A)) direction = Vector3.right;
+        else if (Input.GetKeyDown(KeyCode.D)) direction = Vector3.left;
+
+        if (direction.HasValue)
+        {
+            if (isMoving)
             {
-                StopAllCoroutines();
-                StartCoroutine(Move(oppositeDirection, true, true));
-                return;
+                cachedDirection = direction;
             }
-        }
-
-        if (isMoving)
-        {
+            else
+            {
+                StartCoroutine(Move(direction.Value));
+            }
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.W))
+        if (movePercent > 0.1f && isMoving)
         {
-            HandleInput(KeyCode.W, Vector3.back, ref lastPressTimeW);
-        }
-        else if (Input.GetKeyDown(KeyCode.S))
-        {
-            HandleInput(KeyCode.S, Vector3.forward, ref lastPressTimeS);
-        }
-        else if (Input.GetKeyDown(KeyCode.A))
-        {
-            HandleInput(KeyCode.A, Vector3.right, ref lastPressTimeA);
-        }
-        else if (Input.GetKeyDown(KeyCode.D))
-        {
-            HandleInput(KeyCode.D, Vector3.left, ref lastPressTimeD);
+            if (Input.GetKey(KeyCode.W) && lastMoveDirection == Vector3.back) cachedDirection = Vector3.back;
+            else if (Input.GetKey(KeyCode.S) && lastMoveDirection == Vector3.forward) cachedDirection = Vector3.forward;
+            else if (Input.GetKey(KeyCode.A) && lastMoveDirection == Vector3.right) cachedDirection = Vector3.right;
+            else if (Input.GetKey(KeyCode.D) && lastMoveDirection == Vector3.left) cachedDirection = Vector3.left;
         }
     }
 
-    void HandleInput(KeyCode key, Vector3 direction, ref float lastPressTime)
+    IEnumerator Move(Vector3 direction)
     {
-        if (inputHandlingCoroutine != null)
-        {
-            StopCoroutine(inputHandlingCoroutine);
-        }
-
-        bool isDoublePress = (Time.time - lastPressTime < doublePressThreshold) && (lastKeyCode == key);
-        lastPressTime = Time.time;
-        lastKeyCode = key;
-
-        if (isDoublePress)
-        {
-            StartCoroutine(Move(direction, true));
-        }
-        else
-        {
-            inputHandlingCoroutine = StartCoroutine(WaitForNextInput(direction));
-        }
-    }
-
-    IEnumerator WaitForNextInput(Vector3 direction)
-    {
-        yield return new WaitForSeconds(doublePressThreshold);
-        StartCoroutine(Move(direction, false));
-        inputHandlingCoroutine = null;
-    }
-
-    IEnumerator Move(Vector3 direction, bool isRolling, bool isOppositeMove = false)
-    {
-        if (!isOppositeMove)
-        {
-            endRot = Quaternion.LookRotation(direction);
-
-            while (Quaternion.Angle(transform.rotation, endRot) > rotateError)
-            {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, endRot, rotateSpeed * Time.deltaTime);
-                yield return null;
-            }
-            transform.rotation = endRot;
-        }
-
         isMoving = true;
         lastMoveDirection = direction;
+        cachedDirection = null;
+        movePercent = 0f;
+
+        endRot = Quaternion.LookRotation(direction);
+        while (Quaternion.Angle(transform.rotation, endRot) > rotateError)
+        {
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, endRot, rotateSpeed * Time.deltaTime);
+            yield return null;
+        }
+        transform.rotation = endRot;
+
+        animator.SetBool("isWalking", true);
+
+        float duration = unitLength / walkSpeed;
+        float timeElapsed = 0f;
+        bool isChainingMove = false;
+        bool hasChecked = false;
 
         Vector3 startPos = transform.position;
-
-        if (isOppositeMove)
+        endPos = startPos + direction;
+        while (timeElapsed < duration)
         {
-            endPos = new Vector3(
-                Mathf.Round(startPos.x / unitLength) * unitLength - direction.x * unitLength,
-                startPos.y,
-                Mathf.Round(startPos.z / unitLength) * unitLength - direction.z * unitLength
-            );
+            movePercent = timeElapsed / duration;
+            transform.position = Vector3.Lerp(startPos, endPos, movePercent);
+            timeElapsed += Time.deltaTime;
+
+            if (!hasChecked && timeElapsed >= duration / 2f)
+            {
+                if (cachedDirection.HasValue && cachedDirection.Value == lastMoveDirection)
+                { 
+                    isChainingMove = true; 
+                }
+                hasChecked = true;
+            }
+
+            yield return null;
+        }
+
+        if (isChainingMove)
+        {
+            StartCoroutine(Move(cachedDirection.Value));
         }
         else
         {
-            endPos = startPos + direction * unitLength;
-        }
-
-        animator.SetBool("isRolling", isRolling);
-        animator.SetBool("isWalking", !isRolling);
-
-        float timeElapsed = 0f;
-        float currentSpeed = isRolling ? rollSpeed : walkSpeed;
-        float duration = unitLength / currentSpeed;
-        while (timeElapsed < duration)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, endPos, currentSpeed * Time.deltaTime);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-        //transform.position = endPos;
-
-        if (!isRolling)
-        {
             animator.SetBool("isWalking", false);
+            isMoving = false;
+            movePercent = 0f;
         }
-        
-        isMoving = false;
     }
 }
