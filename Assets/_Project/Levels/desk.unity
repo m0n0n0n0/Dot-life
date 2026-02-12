@@ -758,8 +758,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 2
   texIndex: 3
+  characterAction: 0
 --- !u!65 &102507626
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -902,8 +904,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 0
   texIndex: 1
+  characterAction: 0
 --- !u!65 &136612147
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1365,8 +1369,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 0
   texIndex: 1
+  characterAction: 0
 --- !u!65 &228336761
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1433,8 +1439,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 1
   texIndex: 5
+  characterAction: -1
 --- !u!65 &246460597
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1471,8 +1479,8 @@ GameObject:
   m_Component:
   - component: {fileID: 406059454}
   - component: {fileID: 406059453}
-  - component: {fileID: 406059452}
   - component: {fileID: 406059455}
+  - component: {fileID: 406059452}
   m_Layer: 0
   m_Name: edge_trigger_diary2
   m_TagString: Untagged
@@ -1492,7 +1500,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 597c748b0f0a12e4fb19a6371582b76e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInRange: 0
   endPoint: {x: 9.52, y: 9.03, z: -1}
 --- !u!65 &406059453
 BoxCollider:
@@ -1511,7 +1518,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 2.736277, y: 0.95158577, z: 8.716333}
   m_Center: {x: 0.28778192, y: 0.024207115, z: -0.61143625}
@@ -1880,8 +1887,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 3
   texIndex: 4
+  characterAction: 0
 --- !u!65 &482052297
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2069,8 +2078,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 6
   texIndex: 20
+  characterAction: -1
 --- !u!65 &584539870
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2163,8 +2174,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 2
   texIndex: 3
+  characterAction: 0
 --- !u!65 &612633947
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2325,8 +2338,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 0
   texIndex: 3
+  characterAction: -1
 --- !u!4 &643328762 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 605608d38a42f8b4c96360f84bd44ac0, type: 3}
@@ -2715,8 +2730,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 2
   texIndex: 9
+  characterAction: -1
 --- !u!65 &802155039
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3076,8 +3093,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 4
   texIndex: 5
+  characterAction: 0
 --- !u!65 &945872530
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3504,6 +3523,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a8cc62908f5c6e34db93397be9435620, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1046924409}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a8cc62908f5c6e34db93397be9435620, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1046924416}
   m_SourcePrefab: {fileID: 100100000, guid: a8cc62908f5c6e34db93397be9435620, type: 3}
 --- !u!1 &1046924407 stripped
 GameObject:
@@ -3635,6 +3657,19 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1046924416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046924407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c62f59417ea75fd47a1420872709d301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trigger: {fileID: 1455374545}
 --- !u!1001 &1054976341
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3987,8 +4022,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 3
   texIndex: 5
+  characterAction: 0
 --- !u!65 &1163744487
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4519,8 +4556,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 7
   texIndex: 24
+  characterAction: -1
 --- !u!65 &1294505058
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4738,8 +4777,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 5
   texIndex: 16
+  characterAction: -1
 --- !u!65 &1320698229
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4922,6 +4963,98 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 39e69f984c203f841815f2a590751120, type: 3}
   m_PrefabInstance: {fileID: 1798044623}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1455374544
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1455374546}
+  - component: {fileID: 1455374545}
+  - component: {fileID: 1455374547}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1455374545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1455374544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74080d3e40082054ba63906d7589514e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  edgeTriggers:
+  - {fileID: 1846850740}
+  - {fileID: 406059452}
+  - {fileID: 1590057414}
+  dotTriggers:
+  - {fileID: 633049019}
+  - {fileID: 802155038}
+  - {fileID: 246460596}
+  - {fileID: 2135966435}
+  - {fileID: 1993583114}
+  - {fileID: 1320698228}
+  - {fileID: 584539869}
+  - {fileID: 1294505057}
+  - {fileID: 1658540318}
+  - {fileID: 228336760}
+  - {fileID: 1944829625}
+  - {fileID: 102507625}
+  - {fileID: 1163744486}
+  - {fileID: 1520731571}
+  - {fileID: 136612146}
+  - {fileID: 1574599649}
+  - {fileID: 612633946}
+  - {fileID: 482052296}
+  - {fileID: 945872529}
+  - {fileID: 1612498897}
+  - {fileID: 1840872428}
+  taskTriggers:
+  - {fileID: 1614502784}
+  - {fileID: 1310090827}
+  - {fileID: 569877456}
+  - {fileID: 420994314}
+--- !u!4 &1455374546
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1455374544}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1455374547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1455374544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4392bc89a5cee6d47a2f152816f2e688, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trigger: {fileID: 1455374545}
+  isInInteractingArea: 0
+  taskCompleted: 00000000
+  isWin: 0
 --- !u!1001 &1479760541
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5221,8 +5354,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 4
   texIndex: 6
+  characterAction: 0
 --- !u!65 &1520731572
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5573,8 +5708,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 1
   texIndex: 2
+  characterAction: 0
 --- !u!65 &1574599650
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5629,7 +5766,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 597c748b0f0a12e4fb19a6371582b76e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInRange: 0
   endPoint: {x: 1.19, y: 1.4, z: 1.04}
 --- !u!65 &1590057415
 BoxCollider:
@@ -5915,8 +6051,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 5
   texIndex: 6
+  characterAction: 0
 --- !u!65 &1612498898
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6402,8 +6540,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 8
   texIndex: 28
+  characterAction: -1
 --- !u!65 &1658540319
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7285,8 +7425,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 0
   texIndex: 1
+  characterAction: 1
 --- !u!65 &1840872429
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7339,7 +7481,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 597c748b0f0a12e4fb19a6371582b76e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInRange: 0
   endPoint: {x: 4, y: 3, z: -10}
 --- !u!65 &1846850741
 BoxCollider:
@@ -7358,7 +7499,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 2.736277, y: 0.95158577, z: 8.716333}
   m_Center: {x: 0.28778192, y: 0.024207115, z: -0.61143625}
@@ -7656,8 +7797,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 1
   dotIndex: 1
   texIndex: 2
+  characterAction: 0
 --- !u!65 &1944829626
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7724,8 +7867,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 4
   texIndex: 15
+  characterAction: -1
 --- !u!65 &1993583115
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7844,8 +7989,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622be20c7cad76d4a8bb33157f44be67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressInteract: 0
   dotIndex: 3
   texIndex: 11
+  characterAction: -1
 --- !u!65 &2135966436
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7872,6 +8019,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1046924406}
+  - {fileID: 1455374546}
   - {fileID: 963194228}
   - {fileID: 1710307878}
   - {fileID: 930738189}
