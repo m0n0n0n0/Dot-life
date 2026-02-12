@@ -11,6 +11,9 @@ public class DotDrawingHandler : MonoBehaviour
     [SerializeField]
     private List<Texture> frames = new();
 
+    public event Action<string> OnDrawingCompleted;
+    public string message = "";
+
     private int curDotIndex = 0;
     private int curTexIndex = 0;
     private Material material;
@@ -62,6 +65,12 @@ public class DotDrawingHandler : MonoBehaviour
                 curTexIndex = i;
                 yield return new WaitForSeconds(frameDuration);
             }
+        }
+
+        if (curTexIndex + 1 == frames.Count)
+        {
+            Debug.Log(message);
+            OnDrawingCompleted?.Invoke(message);
         }
     }
 }
