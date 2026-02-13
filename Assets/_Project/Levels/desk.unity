@@ -1527,9 +1527,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 92ac34f11eaca754bb50d9c2a36504d7, type: 3}
     m_FontSize: 16
-    m_FontStyle: 3
+    m_FontStyle: 2
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
@@ -2071,14 +2071,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f817057c15fba4346aa20d464df6faba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameState: {fileID: 0}
-  triggerBus: {fileID: 0}
+  gameState: {fileID: 1455374547}
+  triggerBus: {fileID: 1455374545}
+  edge: {fileID: 1846850740}
   taskStatusImages:
   - {fileID: 561795600}
   - {fileID: 1251912568}
   - {fileID: 798483783}
   - {fileID: 1271889534}
-  completedColor: {r: 0, g: 1, b: 0, a: 1}
+  completedColor: {r: 0.77417064, g: 1, b: 0.31760997, a: 1}
   incompleteColor: {r: 1, g: 1, b: 1, a: 1}
   taskDescriptionText: {fileID: 1422391748}
   taskDescriptions:
@@ -2089,6 +2090,9 @@ MonoBehaviour:
   - "\u4E00\u5F20\u76F8\u7247 \u4E0A\u9762\u7684\u5C0F\u72D7\u6709\u4E9B\u773C\u719F"
   interactionPromptText: {fileID: 716040853}
   interactionMessage: "\u6309 E \u6253\u70B9"
+  edgeMessage: "\u6309 E \u8DF3\u4E0B"
+  gameStartMessage: "\u6309\u4EFB\u610F\u952E\u5F00\u59CB\u6E38\u73A9"
+  gameOverMessage: "\u6211\u4EEC\u7684\u6E38\u620F\u5C31\u5230\u8FD9\u91CC\uFF01\u611F\u8C22\u4F60\u7684\u6E38\u73A9^^"
 --- !u!1 &544341330 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e77e31d29bc976e45835d9fc6cb3ebeb, type: 3}
@@ -2776,7 +2780,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 92ac34f11eaca754bb50d9c2a36504d7, type: 3}
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 0
@@ -2788,7 +2792,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: ' '
 --- !u!222 &716040854
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4025,6 +4029,10 @@ MonoBehaviour:
   distance: -4
   height: 8
   rotationDamping: 3
+  finalPos: {x: -16.3, y: 7.71, z: 0.8}
+  finalRotation: {x: 0, y: 0, z: 0, w: 0}
+  finalMoveDuration: 5
+  gameState: {fileID: 1455374547}
 --- !u!114 &1046924411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4037,6 +4045,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 178ca14006f38d5458aed60a2b20aa89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  runtime: {fileID: 1455374547}
   unitLength: 0.8
   rotateSpeed: 500
   rotateError: 1
@@ -4517,7 +4526,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1130728555640061979, guid: 80201ec7b60e767478c19b40c771739c, type: 3}
       propertyPath: m_Text
-      value: "\u5F00\u59CB"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1130728555640061979, guid: 80201ec7b60e767478c19b40c771739c, type: 3}
       propertyPath: m_FontData.m_FontSize
@@ -5242,6 +5251,7 @@ MonoBehaviour:
   playPauseButton: {fileID: 0}
   nextButton: {fileID: 0}
   prevButton: {fileID: 0}
+  runtime: {fileID: 1455374547}
 --- !u!4 &1292959543
 Transform:
   m_ObjectHideFlags: 0
@@ -5406,12 +5416,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -5919,6 +5929,7 @@ MonoBehaviour:
   trigger: {fileID: 1455374545}
   isInInteractingArea: 0
   taskCompleted: 00000000
+  isGameRunning: 0
   isWin: 0
 --- !u!1001 &1479760541
 PrefabInstance:
