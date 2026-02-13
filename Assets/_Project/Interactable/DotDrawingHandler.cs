@@ -21,13 +21,37 @@ public class DotDrawingHandler : MonoBehaviour
 
     public float frameDuration = 0.2f;
 
+    public event Action<bool> OnPlayerEnterExit;
+    private int dotsEnteredCount = 0;
+
     void Start()
     {
         foreach(var dot in dotTriggers)
         {
             dot.OnDrawing += CheckDot;
+            dot.OnEnteringAndExiting += CheckPlayerEnterExit;
         }
         material = GetComponent<Renderer>().material;
+    }
+
+    void CheckPlayerEnterExit(bool isEnter) 
+    {
+        if (isEnter)
+        {
+            dotsEnteredCount++;
+            if (dotsEnteredCount == 1)
+            {
+                OnPlayerEnterExit?.Invoke(true);
+            }
+        }
+        else
+        {
+            dotsEnteredCount--;
+            if (dotsEnteredCount == 0)
+            {
+                OnPlayerEnterExit?.Invoke(false);
+            }
+        }
     }
 
     void Update()

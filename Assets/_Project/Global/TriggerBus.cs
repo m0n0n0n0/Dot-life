@@ -17,6 +17,7 @@ public class TriggerBus : MonoBehaviour
     public event Action<bool> onInteractingAreaEnteredAndExited;
     public event Action<int> onTaskCompleted;
     public event Action<int> onAnimationStarted;
+    public event Action<int, bool> onTaskAreaEnterExit;
 
     void Start()
     {
@@ -29,9 +30,11 @@ public class TriggerBus : MonoBehaviour
             d.OnEnteringAndExiting += broadcastEnterExit;
             d.OnInteract += broadcastAnimation;
         }
-        foreach (var t in taskTriggers)
+        for (int i = 0; i < taskTriggers.Count; i++)
         {
-            t.OnDrawingCompleted += broadcastTask;
+            int index = i;
+            taskTriggers[i].OnDrawingCompleted += broadcastTask;
+            taskTriggers[i].OnPlayerEnterExit += (isEnter) => onTaskAreaEnterExit?.Invoke(index, isEnter);
         }
     }
 
