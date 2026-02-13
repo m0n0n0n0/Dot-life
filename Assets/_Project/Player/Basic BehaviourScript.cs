@@ -89,7 +89,7 @@ public class BasicBehaviourScript : MonoBehaviour
         while (timeElapsed < duration)
         {
             movePercent = timeElapsed / duration;
-            transform.position = Vector3.Lerp(startPos, endPos, movePercent);
+            transform.position = Vector3.MoveTowards(transform.position, endPos, walkSpeed * Time.deltaTime);
             timeElapsed += Time.deltaTime;
 
             if (!hasChecked && timeElapsed >= duration / 2f)
