@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class BasicBehaviourScript : MonoBehaviour
 {
+    public GameState runtime;
+
     public float unitLength = 3.0f; 
     public float rotateSpeed = 500.0f;
     public float rotateError = 1.0f;
@@ -34,6 +36,11 @@ public class BasicBehaviourScript : MonoBehaviour
 
     void HandleInput()
     {
+        if(!runtime.isGameRunning)
+        {
+            return;
+        }
+
         Vector3? direction = null;
         if (Input.GetKeyDown(KeyCode.W)) direction = Vector3.back;
         else if (Input.GetKeyDown(KeyCode.S)) direction = Vector3.forward;

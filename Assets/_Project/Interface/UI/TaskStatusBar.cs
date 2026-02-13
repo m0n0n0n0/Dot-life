@@ -9,6 +9,8 @@ public class TaskStatusBar : MonoBehaviour
     private GameState gameState;
     [SerializeField]
     private TriggerBus triggerBus;
+    [SerializeField]
+    private EdgeFalling edge;
 
     [SerializeField]
     private List<Image> taskStatusImages;
@@ -29,6 +31,13 @@ public class TaskStatusBar : MonoBehaviour
     private Text interactionPromptText;
     [SerializeField]
     private string interactionMessage = "按 F 键交互";
+    [SerializeField]
+    private string edgeMessage = "按 F 键交互";
+    [SerializeField]
+    private string gameStartMessage = "按任意键开始游玩";
+    [SerializeField]
+    private string gameOverMessage = "我们的游戏就到这里！感谢你的游玩^^";
+
 
     void Start()
     {
@@ -37,10 +46,17 @@ public class TaskStatusBar : MonoBehaviour
         if (triggerBus == null)
             triggerBus = FindObjectOfType<TriggerBus>();
 
+
+        if (gameState != null)
+        {
+            gameState.OnGameOver += HandleGameOver;
+        }
         if (triggerBus != null)
         {
             triggerBus.onTaskAreaEnterExit += HandleTaskAreaEvent;
         }
+
+        edge.OnEnteringAndExiting += HandleEdgeEvent;
 
         if (taskDescriptionText != null)
         {
@@ -50,6 +66,8 @@ public class TaskStatusBar : MonoBehaviour
         {
             interactionPromptText.text = "";
         }
+
+        taskDescriptionText.text = gameStartMessage;
     }
 
     void Update()
@@ -66,6 +84,24 @@ public class TaskStatusBar : MonoBehaviour
         }
     }
 
+    void HandleEdgeEvent(bool isEnter)
+    {
+        if (isEnter)
+        {
+            if (interactionPromptText != null)
+            {
+                interactionPromptText.text = edgeMessage;
+            }
+        }
+        else
+        {
+            if (interactionPromptText != null)
+            {
+                interactionPromptText.text = "";
+            }
+        }
+    }
+
     void HandleTaskAreaEvent(int index, bool isEnter)
     {
         if (isEnter)
@@ -74,7 +110,7 @@ public class TaskStatusBar : MonoBehaviour
             {
                 taskDescriptionText.text = taskDescriptions[index];
             }
-            if (interactionPromptText != null)
+            if (interactionPromptText != null && index != 0)
             {
                 interactionPromptText.text = interactionMessage;
             }
@@ -96,6 +132,18 @@ public class TaskStatusBar : MonoBehaviour
             {
                 interactionPromptText.text = "";
             }
+        }
+    }
+
+    void HandleGameOver()
+    {
+        if (taskDescriptionText != null)
+        {
+            taskDescriptionText.text = gameOverMessage;
+        }
+        if (interactionPromptText != null)
+        {
+            interactionPromptText.text = "";
         }
     }
 

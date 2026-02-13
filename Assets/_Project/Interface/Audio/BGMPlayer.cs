@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,13 +9,15 @@ public class BGMPlayer : MonoBehaviour
     [Header("Audio Settings")]
     public AudioSource audioSource;
     public List<AudioClip> bgmClips;
-    public bool autoPlay = true;
+    public bool autoPlay = false;
 
     [Header("UI References")]
     public Text songTitleText;
     public Button playPauseButton;
     public Button nextButton;
     public Button prevButton;
+
+    public GameState runtime;
 
     private int currentTrackIndex = 0;
     private bool isPlaying = false;
@@ -45,18 +48,12 @@ public class BGMPlayer : MonoBehaviour
             prevButton.onClick.AddListener(PreviousTrack);
         }
 
-        // Start playing if we have clips and autoPlay is true
-        if (bgmClips != null && bgmClips.Count > 0)
-        {
-            if (autoPlay)
-            {
-                PlayTrack(currentTrackIndex);
-            }
-            else
-            {
-                UpdateUI();
-            }
-        }
+        runtime.OnGameStart += StartPlay;
+    }
+
+    void StartPlay()
+    {
+        PlayTrack(currentTrackIndex);
     }
 
     void TogglePlayPause()
