@@ -96,7 +96,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: a2d436d19a5a7d34c8e96a9e7e246477, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -4046,13 +4046,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   runtime: {fileID: 1455374547}
-  unitLength: 0.8
-  rotateSpeed: 500
-  rotateError: 1
-  moveError: 0.05
   walkSpeed: 3
-  endPos: {x: 0, y: 0, z: 0}
-  endRot: {x: 0, y: 0, z: 0, w: 0}
+  acceleration: 20
+  deceleration: 15
+  rotateSpeed: 500
+  groundRayLength: 5
+  groundSnapOffset: 0.05
+  gravity: 20
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxStepHeight: 1
+  stepCheckDist: 1
 --- !u!54 &1046924412
 Rigidbody:
   m_ObjectHideFlags: 0
