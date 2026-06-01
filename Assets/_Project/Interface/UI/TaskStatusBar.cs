@@ -86,7 +86,7 @@ public class TaskStatusBar : MonoBehaviour
 
     void HandleEdgeEvent(bool isEnter)
     {
-        if (isEnter)
+        if (isEnter && edge != null && edge.CanFall())
         {
             if (interactionPromptText != null)
             {
