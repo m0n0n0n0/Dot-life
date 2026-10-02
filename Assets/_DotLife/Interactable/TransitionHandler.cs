@@ -40,7 +40,7 @@ public class TransitionHandler : MonoBehaviour
     {
         for (int i = 0; i < frames.Count; i++)
         {
-            material.SetTexture("_MainTex", frames[i]);
+            material.mainTexture = frames[i];
             yield return new WaitForSeconds(frameRate);
         }
     }

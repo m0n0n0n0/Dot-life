@@ -85,7 +85,7 @@ public class DotDrawingHandler : MonoBehaviour
         {
             if (i < frames.Count)
             {
-                material.SetTexture("_MainTex", frames[i]);
+                material.mainTexture = frames[i];
                 curTexIndex = i;
                 yield return new WaitForSeconds(frameDuration);
             }

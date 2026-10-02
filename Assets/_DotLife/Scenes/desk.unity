@@ -1919,7 +1919,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 23fa84b33bbbbe247a38e5bf34b1ae5c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 24.478264
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 23fa84b33bbbbe247a38e5bf34b1ae5c, type: 3}
       propertyPath: m_LocalScale.y
@@ -1927,11 +1927,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 23fa84b33bbbbe247a38e5bf34b1ae5c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 28.1733
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 23fa84b33bbbbe247a38e5bf34b1ae5c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -8.2
+      value: -9.1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 23fa84b33bbbbe247a38e5bf34b1ae5c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3520,6 +3520,7 @@ GameObject:
   m_Component:
   - component: {fileID: 930738189}
   - component: {fileID: 930738188}
+  - component: {fileID: 930738190}
   m_Layer: 0
   m_Name: FillLight
   m_TagString: Untagged
@@ -3604,6 +3605,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 865393069}
   m_LocalEulerAnglesHint: {x: 33.169, y: 180, z: 180}
+--- !u!114 &930738190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930738187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &939778605 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 9a5d27bb1c5004343aa03c7512109674, type: 3}
@@ -8368,6 +8392,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1710307878}
   - component: {fileID: 1710307877}
+  - component: {fileID: 1710307879}
   m_Layer: 0
   m_Name: KeyLight
   m_TagString: Untagged
@@ -8452,6 +8477,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 865393069}
   m_LocalEulerAnglesHint: {x: 50, y: -16.651, z: 0}
+--- !u!114 &1710307879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710307876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &1728443594 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 9a5d27bb1c5004343aa03c7512109674, type: 3}
