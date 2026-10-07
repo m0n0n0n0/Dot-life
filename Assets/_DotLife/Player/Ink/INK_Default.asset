@@ -17,6 +17,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   diameter: 0.34
+  forwardOffset: 0.2
   subdivisions: 6
   sampleDepth: 0.06
   normalTolerance: 30

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class InkMeterGraphic : MaskableGraphic
 {
     [SerializeField] private Color inkColor = new Color(0.1f, 0.15f, 0.19f, 1f);
-    [SerializeField] private Color trackColor = new Color(0.95f, 0.96f, 0.98f, 0.95f);
+    [SerializeField] private Color trackColor = new Color(0.95f, 0.96f, 0.98f, 0.45f);
     [SerializeField] private Color spentColor = new Color(0.48f, 0.64f, 0.69f, 1f);
     [SerializeField] private Color outlineColor = new Color(0.08f, 0.1f, 0.12f, 0.95f);
     [SerializeField] private Color emptyColor = new Color(0.95f, 0.25f, 0.23f, 1f);
@@ -28,12 +28,41 @@ public class InkMeterGraphic : MaskableGraphic
     {
         vh.Clear();
         Rect outer = rectTransform.rect;
-        DrawCapsule(vh, outer, Color.Lerp(outlineColor, emptyColor, Pulse));
         float inset = Mathf.Clamp(borderWidth, 0f, outer.width * 0.4f);
         Rect inner = Rect.MinMaxRect(outer.xMin + inset, outer.yMin + inset, outer.xMax - inset, outer.yMax - inset);
+        DrawBorder(vh, outer, inner, Color.Lerp(outlineColor, emptyColor, Pulse));
         DrawCapsule(vh, inner, trackColor);
         DrawCapsule(vh, new Rect(inner.x, inner.y, inner.width, inner.height * Trail), spentColor);
         DrawCapsule(vh, new Rect(inner.x, inner.y, inner.width, inner.height * Fill), inkColor);
+    }
+
+    // The outline is a ring, so it does not make the translucent track opaque.
+    private void DrawBorder(VertexHelper vh, Rect outer, Rect inner, Color tint)
+    {
+        if (outer.width <= 0f || outer.height <= 0f) return;
+        int start = vh.currentVertCount;
+        Color32 vertexColor = tint * color;
+        const int halfSegments = 12;
+        for (int cap = 0; cap < 2; cap++)
+            for (int i = 0; i <= halfSegments; i++)
+            {
+                float angle = (cap + (float)i / halfSegments) * Mathf.PI;
+                Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                float outerRadius = Mathf.Min(outer.width, outer.height) * 0.5f;
+                float innerRadius = Mathf.Min(inner.width, inner.height) * 0.5f;
+                Vector2 outerCenter = new Vector2(outer.center.x, cap == 0 ? outer.yMax - outerRadius : outer.yMin + outerRadius);
+                Vector2 innerCenter = new Vector2(inner.center.x, cap == 0 ? inner.yMax - innerRadius : inner.yMin + innerRadius);
+                vh.AddVert(outerCenter + direction * outerRadius, vertexColor, Vector2.zero);
+                vh.AddVert(innerCenter + direction * innerRadius, vertexColor, Vector2.zero);
+            }
+        int count = (halfSegments + 1) * 2;
+        for (int i = 0; i < count; i++)
+        {
+            int current = start + i * 2;
+            int next = start + (i + 1) % count * 2;
+            vh.AddTriangle(current, next, current + 1);
+            vh.AddTriangle(current + 1, next, next + 1);
+        }
     }
 
     private void DrawCapsule(VertexHelper vh, Rect rect, Color tint)

@@ -36,6 +36,12 @@ public sealed class InkSurfaceSampler
             || !motor.IsGrounded || !motor.isActiveAndEnabled) return false;
         Bounds body = motor.Controller.bounds;
         Vector3 foot = new Vector3(body.center.x, body.min.y, body.center.z);
+        Vector3 forward = Vector3.ProjectOnPlane(motor.transform.forward, Vector3.up).normalized;
+        Vector3 horizontalOffset = forward * settings.ForwardOffset;
+        foot += horizontalOffset;
+        // Follow the current ground plane so an uphill probe does not start inside the slope.
+        Vector3 groundNormal = motor.GroundContact.normal;
+        if (groundNormal.y > 0.01f) foot.y -= Vector3.Dot(groundNormal, horizontalOffset) / groundNormal.y;
         float offset = Mathf.Max(0.01f, motor.groundSnapOffset + motor.Controller.skinWidth);
         return CastNearest(foot + Vector3.up * offset, Vector3.down, offset + motor.groundRayLength, out contact)
             && IsAllowed(contact);

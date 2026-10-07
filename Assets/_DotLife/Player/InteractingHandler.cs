@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(BasicBehaviourScript))]
 [DefaultExecutionOrder(-100)]
@@ -17,6 +18,9 @@ public class InteractingHandler : MonoBehaviour
     public KeyCode InteractionKey => interactionKey;
     public PlayerInk Ink { get; private set; }
     public InkStamping Stamping { get; private set; }
+    public bool CanReturnToMenu => !returningToMenu && Movement != null && Movement.runtime != null
+        && Movement.runtime.Phase == GameSessionPhase.Finished && cameraFollowing != null
+        && cameraFollowing.IsEndingPromptReady;
 
     private Animator animator;
     private FallingHandler falling;
@@ -30,6 +34,7 @@ public class InteractingHandler : MonoBehaviour
     private bool committed;
     private bool focused = true;
     private bool dispatchingCallback;
+    private bool returningToMenu;
     private bool CanReadInput => focused && Time.timeScale > 0f && !IsTyping();
     private bool CanContinueAction => Movement != null && Movement.isActiveAndEnabled
         && Movement.Controller != null && Movement.Controller.enabled && Movement.IsGrounded
@@ -55,6 +60,12 @@ public class InteractingHandler : MonoBehaviour
         if (!CanReadInput)
         {
             Movement.SetMoveInput(Vector2.zero);
+            return;
+        }
+        if (Movement.runtime.Phase == GameSessionPhase.Finished)
+        {
+            Movement.SetMoveInput(Vector2.zero);
+            if (Input.GetKeyDown(KeyCode.Escape)) TryReturnToMenu();
             return;
         }
         if (cameraFollowing != null)
@@ -161,6 +172,16 @@ public class InteractingHandler : MonoBehaviour
         if (!isActiveAndEnabled || !CanReadInput || Movement == null || !Movement.CanInteract) return false;
         RefreshSelection();
         return CurrentTarget != null ? CurrentTarget.TryInteract(this) : Stamping != null && Stamping.TryStamp(this);
+    }
+
+    public bool TryReturnToMenu()
+    {
+        if (!isActiveAndEnabled || !CanReadInput || !CanReturnToMenu
+            || !Application.CanStreamedLevelBeLoaded("MainMenu")) return false;
+        returningToMenu = true;
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
+        return true;
     }
 
     public bool TryPerformAction(int characterAction, Func<bool> canCommit, Func<bool> commit)

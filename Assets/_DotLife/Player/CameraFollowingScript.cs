@@ -23,9 +23,13 @@ public class CameraFollowingScript : MonoBehaviour
     public Vector3 finalPos;
     public Quaternion finalRotation = Quaternion.Euler(30f, -90f, 0f);
     [Min(0f)] public float finalMoveDuration = 5f;
+    [Min(0f)] public float finalHoldDuration = 5f;
     [SerializeField] private GameState gameState;
 
     public bool IsMovingToFinal { get; private set; }
+    public bool HasReachedFinalPose { get; private set; }
+    public bool IsEndingPromptReady => isActiveAndEnabled && HasReachedFinalPose
+        && Time.unscaledTime - finalPoseReachedAt >= Mathf.Max(0f, finalHoldDuration);
     public float TargetZoomOffset { get; private set; }
     public float CurrentZoomOffset { get; private set; }
     public float TargetYawOffset { get; private set; }
@@ -39,6 +43,7 @@ public class CameraFollowingScript : MonoBehaviour
     private float zoomVelocity;
     private float yawVelocity;
     private Coroutine finalCoroutine;
+    private float finalPoseReachedAt;
     private Vector3 ViewingOffset
     {
         get
@@ -128,6 +133,7 @@ public class CameraFollowingScript : MonoBehaviour
     {
         if (followCamera == null || finalCoroutine != null) return;
         IsMovingToFinal = true;
+        HasReachedFinalPose = false;
         finalCoroutine = StartCoroutine(MoveToFinalCoroutine());
     }
 
@@ -145,6 +151,8 @@ public class CameraFollowingScript : MonoBehaviour
             yield return null;
         } while (elapsed < duration);
         followCamera.transform.SetPositionAndRotation(finalPos, finalRotation);
+        finalPoseReachedAt = Time.unscaledTime;
+        HasReachedFinalPose = true;
         finalCoroutine = null;
     }
 
@@ -154,5 +162,6 @@ public class CameraFollowingScript : MonoBehaviour
         if (finalCoroutine != null) StopCoroutine(finalCoroutine);
         finalCoroutine = null;
         IsMovingToFinal = false;
+        HasReachedFinalPose = false;
     }
 }

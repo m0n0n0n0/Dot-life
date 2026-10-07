@@ -80,7 +80,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   inkColor: {r: 0.1, g: 0.15, b: 0.19, a: 1}
-  trackColor: {r: 0.95, g: 0.96, b: 0.98, a: 0.95}
+  trackColor: {r: 0.95, g: 0.96, b: 0.98, a: 0.45}
   spentColor: {r: 0.48, g: 0.64, b: 0.69, a: 1}
   outlineColor: {r: 0.08, g: 0.1, b: 0.12, a: 0.95}
   emptyColor: {r: 0.95, g: 0.25, b: 0.23, a: 1}

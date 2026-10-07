@@ -102,6 +102,7 @@ public static class DotLifeStampRegression
         Check(stamping.CanOfferStamp && !interactor.TryInteract() && stamping.ActiveMarkCount == 0 && ink.CurrentInk == 0f,
             "Empty free stamp gives feedback but does not create a mark.");
         Check(ink.TryRefill(), "Resource setup refill.");
+        ValidateForwardOffset(floor.GetComponent<Collider>());
         Check(stamping.TrySamplePlacement(out InkStampPlacement flat) && flat.receiver == floor.GetComponent<Collider>(), "Flat receiver selected.");
         ValidatePlacement(flat);
         float before = ink.CurrentInk;
@@ -125,9 +126,16 @@ public static class DotLifeStampRegression
         interactor.CommitAction();
         Check(stamping.ActiveMarkCount == 1, "Late contact does not duplicate mark.");
         InkMark first = UnityEngine.Object.FindObjectOfType<InkMark>();
+        Check(stamping.TrySamplePlacement(out InkStampPlacement contactPlacement)
+            && Vector3.Distance(first.transform.TransformPoint(first.Geometry.vertices[24]),
+                contactPlacement.point + contactPlacement.normal * stamping.Settings.surfaceOffset) < 0.001f,
+            "Real animation contact uses the forward-shifted sampling origin.");
         Check(first.Geometry.vertexCount == 49 && first.Geometry.triangles.Length == 216
             && first.GetComponent<Collider>() == null && first.GetComponent<Renderer>().sharedMaterial == stamping.Settings.material,
             "Small shared-material mesh; no mark collider.");
+        float configuredForwardOffset = stamping.Settings.forwardOffset;
+        // Keep the original centered edge/gap fixtures as zero-offset regression cases.
+        stamping.Settings.forwardOffset = 0f;
         before = ink.CurrentInk;
         Check(interactor.TryInteract(), "Cancellation action starts.");
         interactor.CancelAction();
@@ -190,6 +198,23 @@ public static class DotLifeStampRegression
         Check(stamping.TrySamplePlacement(out InkStampPlacement angled), "Sloping standable face can be sampled.");
         Check(Vector3.Angle(angled.normal, Vector3.up) > 15f, "Slope uses real face normal.");
         ValidatePlacement(angled);
+        Quaternion slopeRotation = motor.transform.rotation;
+        Vector3 slopePoint = angled.point;
+        Vector3 slopeNormal = angled.normal;
+        stamping.Settings.forwardOffset = configuredForwardOffset;
+        foreach (float yaw in new[] { 0f, 90f, 180f, 270f })
+        {
+            motor.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            Vector3 offset = motor.transform.forward * configuredForwardOffset;
+            Vector3 expected = slopePoint + offset + Vector3.up * (-Vector3.Dot(slopeNormal, offset) / slopeNormal.y);
+            Check(stamping.TrySamplePlacement(out InkStampPlacement shiftedSlope)
+                && Vector3.Distance(shiftedSlope.point, expected) < 0.002f,
+                "Forward stamp follows uphill and downhill ground height: " + yaw);
+            ValidatePlacement(shiftedSlope);
+        }
+        motor.transform.rotation = slopeRotation;
+        stamping.Settings.forwardOffset = 0f;
+        Check(stamping.TrySamplePlacement(out angled), "Original centered slope fixture remains valid.");
         CommitGeometry(angled);
         var movingParent = new GameObject("StampTest_MovingParent");
         movingParent.transform.position = new Vector3(230f, 20f, 200f);
@@ -305,6 +330,7 @@ public static class DotLifeStampRegression
         Check(stamping.ActiveMarkCount == 0 && UnityEngine.Object.FindObjectsOfType<InkMark>().Length == 0, "Clear destroys mark objects.");
         Stand(floor.GetComponent<Collider>(), 200f, 200f);
         var timer = System.Diagnostics.Stopwatch.StartNew();
+        stamping.Settings.forwardOffset = configuredForwardOffset;
         for (int i = 0; i < stamping.Capacity + 40; i++)
         {
             if (!ink.CanSpend) Check(ink.TryRefill(), "Stress refill.");
@@ -419,6 +445,61 @@ public static class DotLifeStampRegression
         meshCount = 0;
         foreach (Mesh mesh in Resources.FindObjectsOfTypeAll<Mesh>()) if (mesh.name == "DotLifeInkMark") meshCount++;
         Check(meshCount == 0, "Scene unload releases all owned ink meshes.");
+    }
+
+    private static void ValidateForwardOffset(Collider floor)
+    {
+        InkStampSettings settings = stamping.Settings;
+        float originalOffset = settings.forwardOffset;
+        Quaternion originalRotation = motor.transform.rotation;
+        GameObject edge = null;
+        try
+        {
+            Check(Mathf.Approximately(originalOffset, 0.2f), "Default free stamp moves forward by 0.2 world units.");
+            foreach (float yaw in new[] { 0f, 90f, 180f, 270f })
+            {
+                motor.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+                Stand(floor, 200f, 200f);
+                settings.forwardOffset = 0f;
+                Check(stamping.TrySamplePlacement(out InkStampPlacement centered), "Zero offset keeps the original capsule-center origin.");
+                Vector3 point = centered.point;
+                settings.forwardOffset = originalOffset;
+                Check(stamping.TrySamplePlacement(out InkStampPlacement shifted)
+                    && Vector3.Distance(shifted.point, point + motor.transform.forward * originalOffset) < 0.001f,
+                    "Offset follows player facing, not camera yaw: " + yaw);
+                Check(Vector3.Distance(shifted.receiver.transform.TransformPoint(shifted.vertices[24]),
+                    shifted.point + shifted.normal * settings.surfaceOffset) < 0.001f, "Whole mesh follows the shifted center.");
+            }
+            settings.forwardOffset = 0f;
+            Check(stamping.TrySamplePlacement(out InkStampPlacement beforeNegative), "Negative offset baseline samples normally.");
+            Vector3 baselinePoint = beforeNegative.point;
+            settings.forwardOffset = -originalOffset;
+            Check(stamping.TrySamplePlacement(out InkStampPlacement negative)
+                && Vector3.Distance(negative.point, baselinePoint - motor.transform.forward * originalOffset) < 0.001f,
+                "Negative offset moves behind the character.");
+            settings.forwardOffset = float.NaN;
+            Check(settings.ForwardOffset == 0f && stamping.TrySamplePlacement(out _), "Invalid offset cannot send non-finite values to physics.");
+            settings.forwardOffset = float.PositiveInfinity;
+            Check(settings.ForwardOffset == 0f, "Infinite offset safely falls back to zero.");
+            settings.forwardOffset = 2f;
+            Check(settings.ForwardOffset == 0.5f, "Oversized offset is bounded.");
+            motor.transform.rotation = Quaternion.identity;
+            edge = Pad("StampTest_ForwardEdge", new Vector3(200f, 20.525f, 203f), new Vector3(1.2f, 0.05f, 1.2f));
+            Stand(edge.GetComponent<Collider>(), 200f, 203.4f);
+            settings.forwardOffset = 0f;
+            Check(stamping.TrySamplePlacement(out _), "Centered footprint fits on the forward-edge fixture.");
+            settings.forwardOffset = originalOffset;
+            float before = ink.CurrentInk;
+            Check(!stamping.TrySamplePlacement(out _) && !interactor.TryInteract() && ink.CurrentInk == before
+                && stamping.ActiveMarkCount == 0, "Forward offset still rejects a footprint crossing the upper sheet edge without ink loss.");
+        }
+        finally
+        {
+            settings.forwardOffset = originalOffset;
+            motor.transform.rotation = originalRotation;
+            if (edge != null) UnityEngine.Object.DestroyImmediate(edge);
+            Stand(floor, 200f, 200f);
+        }
     }
 
     private static GameObject Pad(string name, Vector3 position, Vector3 scale)

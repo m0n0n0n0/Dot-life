@@ -15,12 +15,12 @@ public class TaskStatusBar : MonoBehaviour
     [SerializeField] private Text interactionPromptText;
     [SerializeField] private string interactionMessage = "按 E 打点";
     [SerializeField] private string edgeMessage = "按 E 跳下";
-    [SerializeField] private string inkMessage = "按 E 蘸墨";
     [SerializeField] private string freeStampMessage = "按 E 盖印";
     [SerializeField] private string stampBlockedMessage = "此处无法盖印";
     [SerializeField] private UIPlayerInk inkMeterPrefab;
     [SerializeField] private string gameStartMessage = "按任意键开始游玩";
     [SerializeField] private string gameOverMessage = "我们的游戏就到这里！感谢你的游玩^^";
+    [SerializeField] private string returnToMenuMessage = "按ESC回到开始页面";
     [Header("Readability")]
     [SerializeField] private Text taskHeadingText;
     [SerializeField, Min(1)] private int taskTextSize = 36;
@@ -32,18 +32,21 @@ public class TaskStatusBar : MonoBehaviour
     [SerializeField, Min(0f)] private float statusCircleGap = 12f;
     private GameSessionPhase lastPhase = (GameSessionPhase)(-1);
     private InteractionTarget lastTarget;
-    private DotDrawingHandler lastTask;
+    private int lastTaskIndex = -2;
     private KeyCode lastKey;
     private bool lastFreeStamp;
     private bool lastStampBlocked;
+    private bool lastEndingReady;
     private float stampBlockedUntil;
     private readonly List<Text> statusLabels = new List<Text>();
+    private readonly List<UIInkWellPrompt> inkWellPrompts = new List<UIInkWellPrompt>();
 
     void Awake()
     {
         if (gameState == null) gameState = FindObjectOfType<GameState>();
         if (interactor == null) interactor = FindObjectOfType<InteractingHandler>();
         ApplyReadability();
+        CreateInkWellPrompts();
         if (inkMeterPrefab != null && interactor != null)
         {
             Canvas canvas = GetComponentInParent<Canvas>();
@@ -79,6 +82,22 @@ public class TaskStatusBar : MonoBehaviour
             text.color = Color.black;
             text.raycastTarget = false;
             statusLabels.Add(text);
+        }
+    }
+
+    private void CreateInkWellPrompts()
+    {
+        if (gameState == null || interactor == null) return;
+        TriggerBus bus = gameState.GetComponent<TriggerBus>();
+        if (bus == null) return;
+        foreach (InkWell well in bus.inkWells)
+        {
+            if (well == null) continue;
+            var root = new GameObject("InkWellPrompt", typeof(RectTransform), typeof(Canvas), typeof(UIInkWellPrompt));
+            root.transform.SetParent(well.transform, false);
+            UIInkWellPrompt prompt = root.GetComponent<UIInkWellPrompt>();
+            prompt.Bind(well, interactor, taskDescriptionText != null ? taskDescriptionText.font : null);
+            inkWellPrompts.Add(prompt);
         }
     }
 
@@ -151,6 +170,8 @@ public class TaskStatusBar : MonoBehaviour
         if (interactor != null && interactor.Stamping != null) interactor.Stamping.OnPlacementRejected += HandleStampRejected;
         RefreshStatus(-1);
         lastPhase = (GameSessionPhase)(-1);
+        foreach (UIInkWellPrompt prompt in inkWellPrompts)
+            if (prompt != null) prompt.enabled = true;
     }
 
     private void HandleStampRejected() { stampBlockedUntil = Time.unscaledTime + 1.1f; }
@@ -172,32 +193,34 @@ public class TaskStatusBar : MonoBehaviour
         GameSessionPhase phase = gameState.Phase;
         InteractionTarget target = interactor != null ? interactor.CurrentTarget : null;
         if (target != null && !target.CanInteract(interactor.Movement)) target = null;
-        DotDrawingHandler task = interactor != null ? interactor.CurrentTask : null;
+        int taskIndex = CurrentTaskIndex();
         KeyCode key = interactor != null ? interactor.InteractionKey : KeyCode.E;
         bool freeStamp = target == null && interactor != null && interactor.Stamping != null && interactor.Stamping.CanOfferStamp;
         bool stampBlocked = freeStamp && Time.unscaledTime < stampBlockedUntil;
-        if (phase == lastPhase && target == lastTarget && task == lastTask && key == lastKey && freeStamp == lastFreeStamp
-            && stampBlocked == lastStampBlocked) return;
+        bool endingReady = phase == GameSessionPhase.Finished && interactor != null && interactor.CanReturnToMenu;
+        if (phase == lastPhase && target == lastTarget && taskIndex == lastTaskIndex && key == lastKey && freeStamp == lastFreeStamp
+            && stampBlocked == lastStampBlocked && endingReady == lastEndingReady) return;
         lastPhase = phase;
         lastTarget = target;
-        lastTask = task;
+        lastTaskIndex = taskIndex;
         lastKey = key;
         lastFreeStamp = freeStamp;
         lastStampBlocked = stampBlocked;
+        lastEndingReady = endingReady;
         string description = "";
         string prompt = "";
         if (phase == GameSessionPhase.Waiting) description = gameStartMessage;
-        else if (phase == GameSessionPhase.Finished) description = gameOverMessage;
+        else if (phase == GameSessionPhase.Finished)
+        {
+            description = gameOverMessage;
+            if (endingReady) prompt = returnToMenuMessage;
+        }
         else
         {
-            if (task != null)
-            {
-                int index = (int)task.TaskId;
-                if (index >= 0 && index < taskDescriptions.Count)
-                    description = taskDescriptions[index];
-            }
-            if (target != null)
-                prompt = (target is InkWell ? inkMessage : target is EdgeFalling ? edgeMessage : interactionMessage)
+            if (taskIndex >= 0 && taskIndex < taskDescriptions.Count)
+                description = taskDescriptions[taskIndex];
+            if (target != null && !(target is InkWell))
+                prompt = (target is EdgeFalling ? edgeMessage : interactionMessage)
                     .Replace(" E ", " " + key + " ");
             else if (freeStamp) prompt = stampBlocked ? stampBlockedMessage : freeStampMessage.Replace(" E ", " " + key + " ");
         }
@@ -205,10 +228,26 @@ public class TaskStatusBar : MonoBehaviour
         if (interactionPromptText != null) interactionPromptText.text = prompt;
     }
 
+    private int CurrentTaskIndex()
+    {
+        for (int i = 0; i < gameState.taskCompleted.Count; i++)
+            if (!gameState.taskCompleted[i]) return i;
+        return -1;
+    }
+
     void OnDisable()
     {
         if (gameState != null) gameState.OnTaskStateChanged -= RefreshStatus;
         if (interactor != null && interactor.Stamping != null) interactor.Stamping.OnPlacementRejected -= HandleStampRejected;
         stampBlockedUntil = 0f;
+        foreach (UIInkWellPrompt prompt in inkWellPrompts)
+            if (prompt != null) prompt.enabled = false;
+    }
+
+    void OnDestroy()
+    {
+        foreach (UIInkWellPrompt prompt in inkWellPrompts)
+            if (prompt != null) Destroy(prompt.gameObject);
+        inkWellPrompts.Clear();
     }
 }

@@ -151,6 +151,7 @@ public static class DotLifeCoreRegression
         game.UpdateTasks(4);
         Check(!game.isWin && !game.taskCompleted[0], "Invalid task IDs rejected.");
         ValidateInkResource(bus);
+        ValidatePersistentTaskText(hud);
         interactor.enabled = false;
 
         Check(body != null && body.enabled && motor.GetComponent<Rigidbody>() == null
@@ -536,6 +537,9 @@ public static class DotLifeCoreRegression
         }
         yield return null;
         Check(game.isWin && !game.isGameRunning && endings == 1 && !game.TryStartGame(), "Final state cannot restart.");
+        Invoke(hud, "LateUpdate");
+        Check(!camera.HasReachedFinalPose && !interactor.CanReturnToMenu
+            && ((Text)Field(hud, "interactionPromptText")).text == "", "Camera transition cannot show or enable menu return.");
         Check(motor.IsScriptedMovement && !motor.CanMove, "Victory during falling preserves scripted ownership.");
         deadline = Time.time + 6f;
         while (motor.IsScriptedMovement && Time.time < deadline) yield return null;
@@ -552,9 +556,16 @@ public static class DotLifeCoreRegression
         Check(new Vector2(motor.Velocity.x, motor.Velocity.z).sqrMagnitude < 0.001f, "No residual ending movement.");
         camera.finalMoveDuration = 0.05f;
         camera.enabled = false;
+        Check(!camera.HasReachedFinalPose && !camera.IsEndingPromptReady, "Disabling ending camera clears its arrival state.");
         camera.enabled = true;
+        Check(!interactor.CanReturnToMenu, "Restarted ending camera cannot reuse an old countdown.");
         deadline = Time.time + 2f;
-        while (Vector3.Distance(camera.followCamera.transform.position, camera.finalPos) > 0.001f && Time.time < deadline) yield return null;
+        while (!camera.HasReachedFinalPose && Time.time < deadline) yield return null;
+        Check(camera.HasReachedFinalPose && !camera.IsEndingPromptReady && Mathf.Approximately(camera.finalHoldDuration, 5f),
+            "Actual final-pose arrival starts the default five-second hold.");
+        Invoke(hud, "LateUpdate");
+        Check(((Text)Field(hud, "interactionPromptText")).text == "", "Final pose alone does not show the return prompt.");
+        Check(!interactor.TryReturnToMenu(), "Menu return is rejected before the five-second hold ends.");
         Check(Vector3.Distance(camera.followCamera.transform.position, camera.finalPos) < 0.001f, "Final camera respects authored position.");
         Check(Quaternion.Angle(camera.followCamera.transform.rotation, camera.finalRotation) < 0.01f, "Final camera respects authored rotation.");
         float endingZoom = camera.TargetZoomOffset;
@@ -567,8 +578,31 @@ public static class DotLifeCoreRegression
         Check(camera.TargetYawOffset == endingYaw && Quaternion.Angle(camera.followCamera.transform.rotation, camera.finalRotation) < 0.001f,
             "Mouse orbit cannot override the ending camera.");
         Check(UnityEngine.Object.FindObjectsOfType<TextureSurface>().Length == 4, "One texture owner per task renderer.");
+        float arrivedAt = Time.unscaledTime;
+        double holdDeadline = EditorApplication.timeSinceStartup + 7d;
+        bool hiddenDuringHold = true;
+        while (!camera.IsEndingPromptReady && EditorApplication.timeSinceStartup < holdDeadline)
+        {
+            Invoke(hud, "LateUpdate");
+            hiddenDuringHold &= ((Text)Field(hud, "interactionPromptText")).text == "";
+            yield return null;
+        }
+        Check(hiddenDuringHold, "Prompt remains hidden throughout the final hold.");
+        Check(camera.IsEndingPromptReady && Time.unscaledTime - arrivedAt >= 4.95f, "Five real seconds elapse after camera arrival.");
+        Invoke(hud, "LateUpdate");
+        Check(((Text)Field(hud, "interactionPromptText")).text == "按ESC回到开始页面" && interactor.CanReturnToMenu,
+            "Cached HUD refreshes into the exact bottom return prompt without another state change.");
+        interactor.enabled = false;
+        Check(!interactor.TryReturnToMenu(), "Disabled input handler cannot load the menu.");
+        interactor.enabled = true;
+        Time.timeScale = 0f;
+        Check(!interactor.TryReturnToMenu(), "Paused input cannot return to the menu.");
+        Time.timeScale = 1f;
+        interactor.SendMessage("OnApplicationFocus", false);
+        Check(!interactor.TryReturnToMenu(), "Unfocused input cannot return to the menu.");
+        interactor.SendMessage("OnApplicationFocus", true);
         UnityEngine.Object.Destroy(floor);
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        Check(interactor.TryReturnToMenu() && !interactor.TryReturnToMenu(), "Ending return loads MainMenu exactly once.");
         yield return null;
         MainMenu menu = UnityEngine.Object.FindObjectOfType<MainMenu>();
         Check(menu != null, "Main menu reloads.");
@@ -581,6 +615,7 @@ public static class DotLifeCoreRegression
         PlayerInk freshInk = UnityEngine.Object.FindObjectOfType<PlayerInk>();
         Check(freshInk.CurrentInk == freshInk.InitialInk && !freshInk.HasDipped, "Reload resets ink to the tutorial budget.");
         Check(UnityEngine.Object.FindObjectsOfType<UIPlayerInk>().Length == 1, "Reload does not duplicate the ink meter.");
+        Check(UnityEngine.Object.FindObjectsOfType<UIInkWellPrompt>().Length == 1, "Reload does not duplicate the ink well prompt.");
         Check(UnityEngine.Object.FindObjectsOfType<TextureSurface>().Length == 4, "Texture owners do not accumulate on reload.");
         int runtimeMaterials = 0;
         foreach (Material material in Resources.FindObjectsOfTypeAll<Material>())
@@ -646,6 +681,8 @@ public static class DotLifeCoreRegression
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }
         InkMeterGraphic graphic = meter.GetComponent<InkMeterGraphic>();
+        Check(Mathf.Abs(((Color)Field(graphic, "trackColor")).a - 0.45f) < 0.001f,
+            "Ink meter prefab uses a translucent white track.");
         using (var vertices = new VertexHelper())
         {
             MethodInfo populate = typeof(InkMeterGraphic).GetMethod("OnPopulateMesh", BindingFlags.Instance | BindingFlags.NonPublic,
@@ -667,6 +704,79 @@ public static class DotLifeCoreRegression
             }
         }
         graphic.SetValues(ink.NormalizedInk, ink.NormalizedInk, 0f);
+    }
+
+    private static void ValidatePersistentTaskText(TaskStatusBar hud)
+    {
+        Text description = (Text)Field(hud, "taskDescriptionText");
+        var messages = (System.Collections.Generic.List<string>)Field(hud, "taskDescriptions");
+        var original = new System.Collections.Generic.List<bool>(game.taskCompleted);
+        try
+        {
+            foreach (int completed in new[] { -1, 2, 0, 1 })
+            {
+                if (completed >= 0) game.taskCompleted[completed] = true;
+                Invoke(hud, "LateUpdate");
+                int expected = completed == -1 || completed == 2 ? 0 : completed == 0 ? 1 : 3;
+                Check(description.text == messages[expected], "Persistent task text follows the first unfinished task: " + expected);
+            }
+        }
+        finally
+        {
+            for (int i = 0; i < original.Count; i++) game.taskCompleted[i] = original[i];
+            Invoke(hud, "LateUpdate");
+        }
+        Check(description.text == messages[0], "Task text restores after a temporary state probe.");
+    }
+
+    private static void ValidateWellPrompt(InkWell well, TaskStatusBar hud)
+    {
+        UIInkWellPrompt prompt = UnityEngine.Object.FindObjectOfType<UIInkWellPrompt>();
+        Check(prompt != null && prompt.Source == well && prompt.GetComponent<Canvas>().renderMode == RenderMode.WorldSpace,
+            "Ink well owns a world-space key prompt.");
+        Camera camera = Camera.main;
+        Vector3 position = camera.transform.position;
+        Quaternion rotation = camera.transform.rotation;
+        Collider area = well.GetComponent<Collider>();
+        bool enabled = area.enabled;
+        KeyCode key = interactor.InteractionKey;
+        try
+        {
+            Bounds bounds = area.bounds;
+            camera.transform.position = bounds.center + Vector3.up * 5f + Vector3.back * 6f;
+            camera.transform.LookAt(bounds.center);
+            prompt.TickPrompt(0f);
+            Check(prompt.IsVisible && prompt.GetComponentInChildren<Text>().text == "E", "Entering the refill trigger shows E above the well.");
+            float restingY = prompt.transform.position.y;
+            prompt.TickPrompt(0.45f);
+            Check(Mathf.Abs(prompt.transform.position.y - restingY - 0.06f) < 0.001f, "The key bobs gently above the model.");
+            Check(Quaternion.Angle(prompt.transform.rotation, camera.transform.rotation) < 0.001f,
+                "World-space E faces the camera.");
+            Check(Mathf.Abs(prompt.transform.lossyScale.x - 0.012f) < 0.001f
+                && Mathf.Abs(prompt.transform.lossyScale.y - 0.012f) < 0.001f, "Model scale does not stretch the key prompt.");
+            Check(((Text)Field(hud, "interactionPromptText")).text == "", "Refill no longer writes a screen-space text prompt.");
+            typeof(InteractingHandler).GetField("interactionKey", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(interactor, KeyCode.F);
+            prompt.TickPrompt(0f);
+            Check(prompt.GetComponentInChildren<Text>().text == "F", "Well prompt follows the configured interaction key.");
+            area.enabled = false;
+            prompt.TickPrompt(0f);
+            Check(!prompt.IsVisible, "Disabled refill trigger hides its key immediately.");
+            area.enabled = true;
+            hud.enabled = false;
+            Check(!prompt.IsVisible && !prompt.enabled, "Disabled HUD hides the owned well prompt.");
+            hud.enabled = true;
+            prompt.TickPrompt(0f);
+            Check(prompt.IsVisible && UnityEngine.Object.FindObjectsOfType<UIInkWellPrompt>().Length == 1,
+                "Re-enabled HUD restores one prompt without duplicates.");
+        }
+        finally
+        {
+            area.enabled = enabled;
+            hud.enabled = true;
+            typeof(InteractingHandler).GetField("interactionKey", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(interactor, key);
+            camera.transform.SetPositionAndRotation(position, rotation);
+            prompt.TickPrompt(Time.time);
+        }
     }
 
     private static IEnumerator ValidateInkAfterDiary(DotDrawing first, InkWell well, TaskStatusBar hud, CameraFollowingScript camera)
@@ -696,8 +806,8 @@ public static class DotLifeCoreRegression
         Enter(well, playerCollider);
         interactor.RefreshSelection();
         Invoke(hud, "LateUpdate");
-        Check(interactor.CurrentTarget == well && ((Text)Field(hud, "interactionPromptText")).text.Contains("蘸墨"),
-            "Ink well is selectable with the correct E prompt.");
+        Check(interactor.CurrentTarget == well, "Ink well retains highest target priority.");
+        ValidateWellPrompt(well, hud);
         Check(well.TryInteract(interactor) && !motor.CanMove && ink.CurrentInk == 0f,
             "Dip starts an owned action without filling before contact.");
         Check(!well.TryInteract(interactor), "Repeated dip request is rejected.");
@@ -971,9 +1081,9 @@ public static class DotLifeCoreRegression
         CheckTextFits(description, (string)Field(hud, "gameOverMessage"));
         CheckTextFits(prompt, (string)Field(hud, "interactionMessage"));
         CheckTextFits(prompt, (string)Field(hud, "edgeMessage"));
-        CheckTextFits(prompt, (string)Field(hud, "inkMessage"));
         CheckTextFits(prompt, (string)Field(hud, "freeStampMessage"));
         CheckTextFits(prompt, (string)Field(hud, "stampBlockedMessage"));
+        CheckTextFits(prompt, (string)Field(hud, "returnToMenuMessage"));
         CheckTextFits(heading, heading.text);
         var images = (System.Collections.Generic.List<Image>)Field(hud, "taskStatusImages");
         Bounds headingBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvas, heading.rectTransform);

@@ -819,7 +819,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.21
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalPosition.z
@@ -827,23 +827,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7031894
+      value: 0.7031892
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.7031894
+      value: 0.7031892
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.07432877
+      value: 0.074330136
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.07432877
+      value: -0.074330136
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -90
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: de705dc44c154f74084902bc5d6bdc62, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -2206,11 +2206,12 @@ MonoBehaviour:
   interactionPromptText: {fileID: 716040853}
   interactionMessage: "\u6309 E \u6253\u70B9"
   edgeMessage: "\u6309 E \u8DF3\u4E0B"
-  inkMessage: "\u6309 E \u8638\u58A8"
   freeStampMessage: "\u6309 E \u76D6\u5370"
+  stampBlockedMessage: "\u6B64\u5904\u65E0\u6CD5\u76D6\u5370"
   inkMeterPrefab: {fileID: 9163321313355967980, guid: 1623a15f150d6f24d8de1782a0f7684f, type: 3}
   gameStartMessage: "\u6309\u4EFB\u610F\u952E\u5F00\u59CB\u6E38\u73A9"
   gameOverMessage: "\u6211\u4EEC\u7684\u6E38\u620F\u5C31\u5230\u8FD9\u91CC\uFF01\u611F\u8C22\u4F60\u7684\u6E38\u73A9^^"
+  returnToMenuMessage: "\u6309ESC\u56DE\u5230\u5F00\u59CB\u9875\u9762"
   taskHeadingText: {fileID: 0}
   taskTextSize: 36
   taskTextMinSize: 28
@@ -2519,7 +2520,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f55e7677a0cc1fc45a595c638f438c5b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.256
+      value: 4.84
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f55e7677a0cc1fc45a595c638f438c5b, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2527,7 +2528,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f55e7677a0cc1fc45a595c638f438c5b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.2630001
+      value: 0.89
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f55e7677a0cc1fc45a595c638f438c5b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2984,18 +2985,18 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 92ac34f11eaca754bb50d9c2a36504d7, type: 3}
-    m_FontSize: 14
+    m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 1
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 1
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: ' '
+  m_Text: 
 --- !u!222 &716040854
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3863,7 +3864,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d78367e5992328540b8d19064a36a1bd, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.2995
+      value: 0.46
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d78367e5992328540b8d19064a36a1bd, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4311,6 +4312,7 @@ MonoBehaviour:
   finalPos: {x: -16.3, y: 7.71, z: 0.8}
   finalRotation: {x: 0.1830127, y: -0.6830127, z: 0.1830127, w: 0.6830127}
   finalMoveDuration: 5
+  finalHoldDuration: 5
   gameState: {fileID: 1455374547}
 --- !u!114 &1046924411
 MonoBehaviour:
@@ -4667,7 +4669,7 @@ Transform:
   m_GameObject: {fileID: 1128581596}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 2.88, y: 0, z: 2.04}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5188,13 +5190,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1221857091}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.16341212, y: 0, z: 0, w: 0.9865579}
+  m_LocalRotation: {x: -0.08320034, y: 0.000000014901159, z: 0.00000007171183, w: 0.99653286}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1441737901}
-  m_LocalEulerAnglesHint: {x: -18.81, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -9.545, y: 0, z: 0}
 --- !u!65 &1221857093
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5214,8 +5216,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.20621388, y: 0.6410608, z: 0.16094522}
-  m_Center: {x: 0.009354826, y: 0.22361444, z: 0.09720154}
+  m_Size: {x: 0.20621386, y: 0.7236084, z: 0.21979871}
+  m_Center: {x: 0.0093548205, y: 0.20916069, z: 0.06777484}
 --- !u!224 &1251912567 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1131853162119358663, guid: 03c25763914f99044825c24466d43f79, type: 3}
@@ -5577,8 +5579,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.866218, y: 1.2999082, z: 1.8656603}
-  m_Center: {x: 0.0069432855, y: 0.28945187, z: 0.32500005}
+  m_Size: {x: 1.5037837, y: 1.2999082, z: 1.565206}
+  m_Center: {x: -0.17427322, y: 0.28945184, z: 0.24990527}
 --- !u!1 &1292959540
 GameObject:
   m_ObjectHideFlags: 0
