@@ -1,56 +1,22 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class DotDrawing : MonoBehaviour
+public class DotDrawing : InteractionTarget
 {
-    public bool isPressInteract = false;
-
-    public int dotIndex = 0;
-    public int texIndex = 0;
-
+    public bool isPressInteract;
+    public int dotIndex;
+    public int texIndex;
     public int characterAction = -1;
+    public DotDrawingHandler Owner { get; private set; }
+    public override bool RequiresButton => isPressInteract;
+    public override int Priority => 10;
 
-    public event Action<bool> OnEnteringAndExiting;
-    public event Action<int> OnInteract;
-    public event Action<int, int> OnDrawing;
-
-    private bool playerInRange = false;
-
-    void Start()
+    public void Bind(DotDrawingHandler owner) => Owner = owner;
+    public override bool CanInteract(BasicBehaviourScript player) => IsInRange(player)
+        && player.CanInteract && Owner != null && Owner.CanAccept(this)
+        && (Owner.TaskId == DemoTaskId.Diary || player.runtime.IsTaskComplete(DemoTaskId.Diary));
+    public override bool TryInteract(InteractingHandler interactor)
     {
-        
-    }
-
-    void Update()
-    {
-        if (isPressInteract && playerInRange && Input.GetKeyDown(KeyCode.E))
-        {
-            Interact();
-        }
-    }
-
-    void Interact()
-    {
-        Debug.Log("Interact with " + gameObject.name);
-        OnInteract?.Invoke(characterAction);
-        OnDrawing?.Invoke(dotIndex, texIndex);
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        playerInRange = true;
-        OnEnteringAndExiting?.Invoke(true);
-        if (!isPressInteract)
-        { 
-            OnDrawing?.Invoke(dotIndex, texIndex); 
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        OnEnteringAndExiting?.Invoke(false);
-        playerInRange = false;
+        if (interactor == null || !interactor.isActiveAndEnabled || !CanInteract(interactor.Movement)) return false;
+        return interactor.TryPerformDrawing(this);
     }
 }

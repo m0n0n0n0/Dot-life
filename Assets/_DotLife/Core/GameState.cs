@@ -1,54 +1,73 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum DemoTaskId { Unassigned = -1, Diary = 0, YuwenBook = 1, MathBook = 2, Photo = 3 }
+public enum GameSessionPhase { Waiting, Playing, Finished }
+
 public class GameState : MonoBehaviour
 {
-    [SerializeField]
-    private TriggerBus trigger;
-
+    [SerializeField] private TriggerBus trigger;
     public bool isInInteractingArea;
-    public List<bool> taskCompleted;
+    public List<bool> taskCompleted = new List<bool>();
+    public bool isGameRunning;
+    public bool isWin;
 
-    private int taskCount = 0;
-
-    public bool isGameRunning = false;
-    public bool isWin = false;
-
+    public GameSessionPhase Phase => isWin ? GameSessionPhase.Finished
+        : isGameRunning ? GameSessionPhase.Playing : GameSessionPhase.Waiting;
     public event Action OnGameStart;
     public event Action OnGameOver;
+    public event Action<int> OnTaskStateChanged;
 
-    void Start()
+    void Awake()
     {
+        if (trigger == null) trigger = GetComponent<TriggerBus>();
+        if (taskCompleted == null) taskCompleted = new List<bool>();
+    }
+
+    void OnEnable()
+    {
+        if (trigger == null) return;
         trigger.onInteractingAreaEnteredAndExited += UpdateInInteractingArea;
         trigger.onTaskCompleted += UpdateTasks;
+        isInInteractingArea = trigger.HasPlayerInRange;
+        foreach (DotDrawingHandler task in trigger.taskTriggers)
+            if (task != null && task.IsComplete) UpdateTasks((int)task.TaskId);
     }
 
-    void Update()
+    public bool TryStartGame()
     {
-        if (!isGameRunning && Input.anyKeyDown)
-        {
-            OnGameStart?.Invoke();
-            isGameRunning = true;
-        }
+        if (!isActiveAndEnabled || Phase != GameSessionPhase.Waiting) return false;
+        isGameRunning = true;
+        OnGameStart?.Invoke();
+        return true;
     }
 
-    void UpdateInInteractingArea(bool isEnter)
+    public bool IsTaskComplete(DemoTaskId id)
     {
-        isInInteractingArea = isEnter;
+        int index = (int)id;
+        return index >= 0 && index < taskCompleted.Count && taskCompleted[index];
     }
 
-    void UpdateTasks(int n)
+    void UpdateInInteractingArea(bool entered) => isInInteractingArea = entered;
+
+    public void UpdateTasks(int index)
     {
-        taskCompleted[n] = true;
-        taskCount++;
-        if (taskCount == taskCompleted.Count)
-        {
-            isWin = true;
-            Debug.Log("Win");
-            isGameRunning = false;
-            OnGameOver.Invoke();
-        }
+        if (Phase != GameSessionPhase.Playing || index < 0
+            || index >= taskCompleted.Count || taskCompleted[index]) return;
+        taskCompleted[index] = true;
+        OnTaskStateChanged?.Invoke(index);
+        foreach (bool completed in taskCompleted)
+            if (!completed) return;
+        isWin = true;
+        isGameRunning = false;
+        OnGameOver?.Invoke();
+    }
+
+    void OnDisable()
+    {
+        if (trigger == null) return;
+        trigger.onInteractingAreaEnteredAndExited -= UpdateInInteractingArea;
+        trigger.onTaskCompleted -= UpdateTasks;
     }
 }
