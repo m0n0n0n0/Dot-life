@@ -9,6 +9,8 @@
 | `Assets/_DotLife/Interactable` | 绘制点、任务绘制、边缘触发和过渡逻辑 |
 | `Assets/_DotLife/UI` | 菜单、HUD 脚本及 `Prefabs` |
 | `Assets/_DotLife/Audio` | 播放逻辑 |
+| `Assets/_DotLife/Rendering` | 风格化 Shader；ToonLit 管表面 / 外壳 / 透明轮廓，SceneOutline 管全场淡色几何边线；自由墨迹 InkStamp.shader 仍在 Player，不趁机移动；对象材质 / 贴图仍归 Art |
+| `Assets/_DotLife/Editor` | 项目接线、样例 / 全场材质切换及长期回归工具；全场控制使用 DotLifeSceneToonSetup |
 | `Assets/_DotLife/Scenes` | `MainMenu`、`desk` 场景及烘焙数据 |
 | `Assets/Art/Characters/Dot` | 角色模型、动画源文件、材质、贴图 |
 | `Assets/Art/Environments/Desk` | 桌面物件的模型、材质、贴图和绘制帧 |
@@ -18,6 +20,8 @@
 | `Assets/Settings`、`Assets/Docs` | 项目配置、协作文档 |
 
 纯视觉资产放 `Art`，带玩法或 UI 职责的预制体放 `_DotLife` 对应模块。不提前创建空目录；以后有待整理的导入资源时，再按需使用 `Art/_Incoming`。
+
+全场复制材质使用 `MAT_*_Toon`，原 Lit / FBX 映射保留。`Assets/Settings/MAT_SceneOutline.mat` 属于全屏效果配置，不属于某个物体；两项描边 Feature 位于同目录的 URP Renderer。使用与边界见 [SCENE_STYLE.md](SCENE_STYLE.md)。
 
 ## 命名
 
@@ -73,6 +77,6 @@ Player_Root    原角色整体，保留模型内部层级和脚本挂载位置
 | `Characters/Dot/Models/dot.fbx` | 当前角色使用 `dot - Copy.fbx`，原模型暂不删除 |
 | `New Terrain.asset`、`New Terrain 1.asset` | 确认用途和历史需求后再处理 |
 | `TutorialInfo`、`Readme.asset` | Unity 模板内容，后续单独清理 |
-| URP 配置及 `UniversalRenderPipelineGlobalSettings.asset` | 当前项目使用 Built-in，管线方案确定前保留 |
+| URP 配置及 `UniversalRenderPipelineGlobalSettings.asset` | 已使用 URP 14；正式配置以 ROADMAP 为准，旧预设先查依赖再决定清理 |
 
 这些是候选项，不代表可以直接删除。后续画面、渲染、3C、交互和 UI 修改应分批验证，避免与目录迁移混在一起。
