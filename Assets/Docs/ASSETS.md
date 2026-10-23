@@ -8,7 +8,7 @@
 | `Assets/_DotLife/Player` | 角色移动、镜头、交互、跌落逻辑与主动画控制器 |
 | `Assets/_DotLife/Interactable` | 绘制点、任务绘制、边缘触发和过渡逻辑 |
 | `Assets/_DotLife/UI` | 菜单、HUD 脚本及 `Prefabs` |
-| `Assets/_DotLife/Audio` | 播放逻辑 |
+| `Assets/_DotLife/Audio` | BGM / 角色音效逻辑与 `SFX_Player` 配置；接入见 [AUDIO.md](AUDIO.md) |
 | `Assets/_DotLife/Rendering` | 风格化 Shader；ToonLit 管表面 / 外壳 / 透明轮廓，SceneOutline 管全场淡色几何边线；自由墨迹 InkStamp.shader 仍在 Player，不趁机移动；对象材质 / 贴图仍归 Art |
 | `Assets/_DotLife/Editor` | 项目接线、样例 / 全场材质切换及长期回归工具；全场控制使用 DotLifeSceneToonSetup |
 | `Assets/_DotLife/Scenes` | `MainMenu`、`desk` 场景及烘焙数据 |
@@ -58,6 +58,7 @@ Player_Root    原角色整体，保留模型内部层级和脚本挂载位置
 - `Book`、`Obstacle` 和模型内部节点保留原有语义；`Erasers` 修正原拼写。
 - 背景墙使用 `RoomWall_E`；碰撞边界仍使用 `LevelBounds/Wall_E` 等名称。
 - `Player_Root` 暂不拆出 `Visuals`：现有脚本直接获取同根 Animator。
+- `_Systems/Audio` 下保留 `BGMManager`，角色音效独立放在 `PlayerSfxManager`，选中该物体直接在 Inspector 管理素材 / 音量 / 步距。角色上的 `PlayerSfxEvents` 只转发动画事件，不管理声音参数；见 AUDIO。
 - 不拆解 FBX 实例；不改动画绑定路径、任务消息、任务索引和绘制帧顺序。
 
 ## 移动与检查

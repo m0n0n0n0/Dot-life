@@ -18,7 +18,7 @@ public class InteractingHandler : MonoBehaviour
     public KeyCode InteractionKey => interactionKey;
     public PlayerInk Ink { get; private set; }
     public InkStamping Stamping { get; private set; }
-    public bool CanReturnToMenu => !returningToMenu && Movement != null && Movement.runtime != null
+    public bool CanReturnToMenu => !returningToMenu && !completionFeedbackPending && Movement != null && Movement.runtime != null
         && Movement.runtime.Phase == GameSessionPhase.Finished && cameraFollowing != null
         && cameraFollowing.IsEndingPromptReady;
 
@@ -35,6 +35,8 @@ public class InteractingHandler : MonoBehaviour
     private bool focused = true;
     private bool dispatchingCallback;
     private bool returningToMenu;
+    private bool completionFeedbackPending;
+    public void SetCompletionFeedbackPending(bool pending) => completionFeedbackPending = pending;
     private bool CanReadInput => focused && Time.timeScale > 0f && !IsTyping();
     private bool CanContinueAction => Movement != null && Movement.isActiveAndEnabled
         && Movement.Controller != null && Movement.Controller.enabled && Movement.IsGrounded
@@ -66,6 +68,11 @@ public class InteractingHandler : MonoBehaviour
         {
             Movement.SetMoveInput(Vector2.zero);
             if (Input.GetKeyDown(KeyCode.Escape)) TryReturnToMenu();
+            return;
+        }
+        if (Movement.IsAppearing)
+        {
+            Movement.SetMoveInput(Vector2.zero);
             return;
         }
         if (cameraFollowing != null)

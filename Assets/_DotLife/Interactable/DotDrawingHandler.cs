@@ -8,6 +8,8 @@ public class DotDrawingHandler : MonoBehaviour
     [SerializeField] private List<DotDrawing> dotTriggers = new List<DotDrawing>();
     [SerializeField] private List<Texture> frames = new List<Texture>();
     [SerializeField] private DemoTaskId taskId = DemoTaskId.Unassigned;
+    [UnityEngine.Serialization.FormerlySerializedAs("diaryCompositeShader")]
+    [SerializeField] private Shader frameCompositeShader;
     public string message = "";
     [Min(0f)] public float frameDuration = 0.2f;
     public event Action<string> OnDrawingCompleted;
@@ -15,7 +17,7 @@ public class DotDrawingHandler : MonoBehaviour
     public event Action<bool> OnPlayerEnterExit;
     public event Action OnProgressChanged;
     public DemoTaskId TaskId => taskId;
-    public int AcceptedSteps => curDotIndex;
+    public int AcceptedSteps => acceptedDots.Count;
     public int StepCount => dotTriggers.Count;
     public bool IsComplete { get; private set; }
     public bool IsConfigured { get; private set; }
@@ -27,10 +29,10 @@ public class DotDrawingHandler : MonoBehaviour
     private TextureSurface surface;
     private TransitionHandler transition;
     private Coroutine animationCoroutine;
-    private int curDotIndex;
-    private int curTexIndex;
-    private int targetTexIndex;
     private bool drawingComplete;
+    private readonly HashSet<DotDrawing> acceptedDots = new HashSet<DotDrawing>();
+    private readonly Queue<int> pendingFrames = new Queue<int>();
+    private TaskInkComposite composite;
 
     void Awake()
     {
@@ -47,6 +49,7 @@ public class DotDrawingHandler : MonoBehaviour
     {
         bool valid = taskId != DemoTaskId.Unassigned && dotTriggers != null
             && dotTriggers.Count > 0 && frames != null && frames.Count > 0 && surface != null && surface.IsReady;
+        if (dotTriggers != null && dotTriggers.Count > 1 && frameCompositeShader == null) valid = false;
         if (valid)
         {
             var ordered = new DotDrawing[dotTriggers.Count];
@@ -67,7 +70,7 @@ public class DotDrawingHandler : MonoBehaviour
             foreach (Texture frame in frames) if (frame == null) valid = false;
         }
         if (!valid) Debug.LogError("Invalid drawing configuration: " + name
-            + ". Check task ID, unique ordered dots, increasing texture indices, and frames.", this);
+            + ". Check task ID, unique dot indices, increasing texture indices, frames, and frame composite shader.", this);
         return valid;
     }
 
@@ -95,13 +98,22 @@ public class DotDrawingHandler : MonoBehaviour
     }
 
     public bool CanAccept(DotDrawing dot) => isActiveAndEnabled && IsConfigured && !IsComplete
-        && !drawingComplete && dot != null && dot.Owner == this && dot.dotIndex == curDotIndex;
+        && !drawingComplete && dot != null && dot.Owner == this
+        && dotTriggers.Contains(dot) && !acceptedDots.Contains(dot);
 
     public bool TryCommit(DotDrawing dot)
     {
         if (!CanAccept(dot)) return false;
-        targetTexIndex = dot.texIndex;
-        curDotIndex++;
+        if (dotTriggers.Count > 1)
+        {
+            if (composite == null) composite = new TaskInkComposite(frames[0], frameCompositeShader);
+            if (!composite.IsReady) return false;
+        }
+        int firstFrame = 1;
+        foreach (DotDrawing previous in dotTriggers)
+            if (previous.dotIndex == dot.dotIndex - 1) { firstFrame = previous.texIndex + 1; break; }
+        for (int frame = firstFrame; frame <= dot.texIndex; frame++) pendingFrames.Enqueue(frame);
+        acceptedDots.Add(dot);
         NotifyProgress();
         ResumePresentation();
         return true;
@@ -114,20 +126,32 @@ public class DotDrawingHandler : MonoBehaviour
         {
             if (transition == null || !transition.CanPlay || transition.IsComplete) CompleteTask();
         }
-        else if (animationCoroutine == null && curDotIndex > 0)
+        else if (animationCoroutine == null && AcceptedSteps > 0)
             animationCoroutine = StartCoroutine(AnimateMaterial());
     }
 
     private IEnumerator AnimateMaterial()
     {
         yield return null;
-        while (curTexIndex < targetTexIndex)
+        while (pendingFrames.Count > 0)
         {
-            surface.SetTexture(frames[++curTexIndex]);
+            int frame = pendingFrames.Dequeue();
+            if (composite != null)
+            {
+                composite.Apply(frames[frame - 1], frames[frame]);
+                surface.SetTexture(composite.Texture);
+            }
+            else surface.SetTexture(frames[frame]);
             yield return new WaitForSeconds(Mathf.Max(0f, frameDuration));
         }
         animationCoroutine = null;
-        if (curDotIndex != dotTriggers.Count) yield break;
+        if (AcceptedSteps != dotTriggers.Count) yield break;
+        surface.SetTexture(frames[frames.Count - 1]);
+        if (composite != null)
+        {
+            composite.Dispose();
+            composite = null;
+        }
         drawingComplete = true;
         OnDrawingCompleted?.Invoke(message);
         ResumePresentation();
@@ -147,6 +171,14 @@ public class DotDrawingHandler : MonoBehaviour
         foreach (Action handler in OnProgressChanged.GetInvocationList())
             try { handler(); }
             catch (Exception exception) { Debug.LogException(exception, this); }
+    }
+
+    void OnDestroy()
+    {
+        if (composite == null) return;
+        if (surface != null && surface.CurrentTexture == composite.Texture) surface.SetTexture(frames[0]);
+        composite.Dispose();
+        composite = null;
     }
 
     void OnDisable()

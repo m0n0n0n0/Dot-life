@@ -45,7 +45,9 @@
 
 ## 原理与边界
 
-采用两层：不透明文具延续反向外壳；`DotLife_SceneEdges` 用深度与**几何法线**补薄纸、开放网格和墙面边线，不检测底图颜色或法线贴图中的笔画。房间单面大网格不使用外壳，避免背面遮屏。透明纸使用 Alpha 内侧轮廓，不写深度、不填镂空，不参与不透明屏幕空间找边。UI / 浮动 E / 墨水条和自由墨迹保持独立绘制。
+采用两层：不透明文具延续反向外壳；`DotLife_SceneEdges` 用深度与**几何法线**补薄纸、开放网格和墙面边线，不检测底图颜色或法线贴图中的笔画。房间单面大网格不使用外壳，避免背面遮屏。仍使用半透明配置的材质采用 Alpha 内侧轮廓，不写深度、不填镂空；下面两张裁切纸例外。UI / 浮动 E / 墨水条和自由墨迹保持独立绘制。
+
+2026-10-22 纸张遮挡试改：针对 `paper4_low` / `paper5_low` 随镜头远近出现上下关系异常的反馈，仅将 `MAT_Paper4_Toon` / `MAT_Paper5_Toon` 改成 Opaque + Alpha Clip（Cutoff 0.5），队列 2450、RenderType TransparentCutout、One/Zero 混合、ZWrite 开启，恢复 DepthOnly / DepthNormals 通道，使纸张实体及镂空参与一致的深度判断。原先禁用的 ShadowCaster 保留，不额外改变投影；贴图、模型、摆放、原 Lit 材质、Shader 和玩法不改。裁切纸现在会参与屏幕空间边线，边缘观感需一起观察。只作静态核对，未启动 Unity 检查或构建；是否解决近远遮挡、孔洞和完成后贴图显示，待用户手动确认。
 
 `URP_DotLife_Renderer` 中两项分别是 `DotLife_ToonOutline`（Render Objects）和 `DotLife_SceneEdges`（内置 Full Screen Pass）。后者在透明物件之前绘制，要求 Depth + Normal，**会触发深度 / 法线预通道并增加开销**；不复制屏幕颜色。URP Asset 的全局 Depth / Opaque Texture 开关仍关闭，但不能据此判断没有深度开销。[URP 14 全屏 Feature](https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@14.0/manual/renderer-features/renderer-feature-full-screen-pass.html)
 

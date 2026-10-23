@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8e774eedf314aa089f29be339a603aa, type: 3}
+  m_Name: SFX_Player
+  m_EditorClassIdentifier: 
+  output: {fileID: 0}
+  footstepClips:
+  - {fileID: 8300000, guid: c3a0d384acb5b9a4d8af0bee5d2820a6, type: 3}
+  - {fileID: 8300000, guid: 6af94a40fed40c44c82de5fb0fa561f2, type: 3}
+  footstepVolume: 0.4
+  footstepPitch: {x: 0.95, y: 1.05}
+  footstepMode: 0
+  stepDistance: 1.24
+  minimumStepInterval: 0.12
+  minimumMoveSpeed: 0.1
+  stampClips:
+  - {fileID: 8300000, guid: f29d6db9c3a008d4aae34c3399830406, type: 3}
+  stampVolume: 0.7
+  stampPitch: {x: 0.97, y: 1.03}
+  refillClips:
+  - {fileID: 8300000, guid: adf4e7fa93007bd49937217a0922f285, type: 3}
+  refillVolume: 0.7
+  refillPitch: {x: 0.97, y: 1.03}

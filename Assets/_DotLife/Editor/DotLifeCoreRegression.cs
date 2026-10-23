@@ -147,6 +147,9 @@ public static class DotLifeCoreRegression
         game.OnGameStart += () => starts++;
         game.OnGameOver += () => endings++;
         Check(game.TryStartGame() && !game.TryStartGame() && starts == 1, "Start is idempotent.");
+        float entranceDeadline = Time.time + 10f;
+        while (motor.IsAppearing && Time.time < entranceDeadline) yield return null;
+        Check(!motor.IsAppearing, "Entrance releases movement before ordinary gameplay cases.");
         game.UpdateTasks(-1);
         game.UpdateTasks(4);
         Check(!game.isWin && !game.taskCompleted[0], "Invalid task IDs rejected.");
@@ -429,7 +432,7 @@ public static class DotLifeCoreRegression
         diary.frameDuration = 0.01f;
         float deadline = Time.time + 8f;
         while (!diary.IsComplete && Time.time < deadline) yield return null;
-        Check(diary.IsComplete && game.IsTaskComplete(DemoTaskId.Diary), "Automatic ordered points retry without re-entry. Steps="
+        Check(diary.IsComplete && game.IsTaskComplete(DemoTaskId.Diary), "Automatic diary points finish without re-entry or visit-order requirements. Steps="
             + diary.AcceptedSteps + "; grounded=" + motor.IsGrounded + "; action=" + motor.ActionState);
         foreach (DotDrawing dot in diary.Dots) Exit(dot, playerCollider);
         IEnumerator refillChecks = ValidateInkAfterDiary(first, bus.inkWells[0], hud, camera);
@@ -504,16 +507,18 @@ public static class DotLifeCoreRegression
             if (transition != null) transition.frameRate = task.TaskId == DemoTaskId.Photo ? 0.05f : 0.01f;
             int logicalComplete = 0;
             task.OnTaskCompleted += ignored => logicalComplete++;
-            for (int index = task.AcceptedSteps; index < task.StepCount; index++)
+            for (int index = task.StepCount - 1; index >= 0; index--)
             {
                 DotDrawing dot = FindDot(task, index);
+                if (!task.CanAccept(dot)) continue;
+                int previousCount = task.AcceptedSteps;
                 Enter(dot, playerCollider);
                 motor.RefreshGroundContact();
-                Check(dot.TryInteract(interactor), "Accept current step " + task.TaskId + ":" + index);
+                Check(dot.TryInteract(interactor), "Accept reverse-order point " + task.TaskId + ":" + index);
                 deadline = Time.time + 8f;
-                while ((task.AcceptedSteps <= index || motor.ActionState == PlayerActionState.Interacting) && Time.time < deadline)
+                while ((task.AcceptedSteps <= previousCount || motor.ActionState == PlayerActionState.Interacting) && Time.time < deadline)
                     yield return null;
-                Check(task.AcceptedSteps == index + 1, "Exactly one step accepted.");
+                Check(task.AcceptedSteps == previousCount + 1 && !task.CanAccept(dot), "Exactly one unique point accepted.");
                 Exit(dot, playerCollider);
             }
             if (transition != null && !transition.IsComplete)
@@ -538,6 +543,9 @@ public static class DotLifeCoreRegression
         yield return null;
         Check(game.isWin && !game.isGameRunning && endings == 1 && !game.TryStartGame(), "Final state cannot restart.");
         Invoke(hud, "LateUpdate");
+        if (hud.HasPendingCompletionFeedback)
+            Check(((Text)Field(hud, "taskDescriptionText")).text == "" && !interactor.CanReturnToMenu,
+                "Completion feedback precedes ending text and menu return.");
         Check(!camera.HasReachedFinalPose && !interactor.CanReturnToMenu
             && ((Text)Field(hud, "interactionPromptText")).text == "", "Camera transition cannot show or enable menu return.");
         Check(motor.IsScriptedMovement && !motor.CanMove, "Victory during falling preserves scripted ownership.");
@@ -592,6 +600,7 @@ public static class DotLifeCoreRegression
         Invoke(hud, "LateUpdate");
         Check(((Text)Field(hud, "interactionPromptText")).text == "按ESC回到开始页面" && interactor.CanReturnToMenu,
             "Cached HUD refreshes into the exact bottom return prompt without another state change.");
+        Check(!hud.HasPendingCompletionFeedback, "Completion feedback releases its ending guard.");
         interactor.enabled = false;
         Check(!interactor.TryReturnToMenu(), "Disabled input handler cannot load the menu.");
         interactor.enabled = true;
@@ -718,7 +727,11 @@ public static class DotLifeCoreRegression
                 if (completed >= 0) game.taskCompleted[completed] = true;
                 Invoke(hud, "LateUpdate");
                 int expected = completed == -1 || completed == 2 ? 0 : completed == 0 ? 1 : 3;
-                Check(description.text == messages[expected], "Persistent task text follows the first unfinished task: " + expected);
+                var hint = hud.GetSceneHint(expected);
+                Text sceneDescription = hint != null ? hint.GetComponentInChildren<Text>() : null;
+                bool inScene = hud.SceneHintsEnabled && hint != null && hint.IsReady && Camera.main != null;
+                Check(inScene ? description.text == "" && sceneDescription != null && hint.FullDescription == messages[expected]
+                    : description.text == messages[expected], "Task text follows the first unfinished task in its selected presentation: " + expected);
             }
         }
         finally
@@ -726,7 +739,10 @@ public static class DotLifeCoreRegression
             for (int i = 0; i < original.Count; i++) game.taskCompleted[i] = original[i];
             Invoke(hud, "LateUpdate");
         }
-        Check(description.text == messages[0], "Task text restores after a temporary state probe.");
+        var restoredHint = hud.GetSceneHint(hud.ActiveTaskIndex);
+        bool restoredInScene = hud.SceneHintsEnabled && restoredHint != null && restoredHint.IsReady && Camera.main != null;
+        Check(restoredInScene ? description.text == "" : description.text == messages[hud.ActiveTaskIndex],
+            "Task text restores after a temporary state probe.");
     }
 
     private static void ValidateWellPrompt(InkWell well, TaskStatusBar hud)
@@ -1079,10 +1095,7 @@ public static class DotLifeCoreRegression
         foreach (string message in messages) CheckTextFits(description, message);
         CheckTextFits(description, (string)Field(hud, "gameStartMessage"));
         CheckTextFits(description, (string)Field(hud, "gameOverMessage"));
-        CheckTextFits(prompt, (string)Field(hud, "interactionMessage"));
-        CheckTextFits(prompt, (string)Field(hud, "edgeMessage"));
-        CheckTextFits(prompt, (string)Field(hud, "freeStampMessage"));
-        CheckTextFits(prompt, (string)Field(hud, "stampBlockedMessage"));
+        CheckTextFits(prompt, interactor.InteractionKey.ToString());
         CheckTextFits(prompt, (string)Field(hud, "returnToMenuMessage"));
         CheckTextFits(heading, heading.text);
         var images = (System.Collections.Generic.List<Image>)Field(hud, "taskStatusImages");

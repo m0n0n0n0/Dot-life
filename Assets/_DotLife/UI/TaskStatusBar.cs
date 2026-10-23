@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(1200)]
 public class TaskStatusBar : MonoBehaviour
 {
     [SerializeField] private GameState gameState;
@@ -9,18 +10,24 @@ public class TaskStatusBar : MonoBehaviour
     [SerializeField] private List<Image> taskStatusImages;
     [SerializeField] private Color completedColor = Color.green;
     [SerializeField] private Color incompleteColor = Color.white;
+    [SerializeField, Range(0f, 1f)] private float incompleteOpacity = 0.5f;
     [SerializeField] private Text taskDescriptionText;
     [SerializeField] private List<string> taskDescriptions = new List<string> { "日记", "语文书", "数学书", "相册" };
+    [Header("Task Scene Hints")]
+    [SerializeField, InspectorName("Use Task Scene Hints")] private bool diaryHintInScene = true;
     [Header("Interaction Prompt")]
     [SerializeField] private Text interactionPromptText;
-    [SerializeField] private string interactionMessage = "按 E 打点";
-    [SerializeField] private string edgeMessage = "按 E 跳下";
-    [SerializeField] private string freeStampMessage = "按 E 盖印";
-    [SerializeField] private string stampBlockedMessage = "此处无法盖印";
     [SerializeField] private UIPlayerInk inkMeterPrefab;
     [SerializeField] private string gameStartMessage = "按任意键开始游玩";
     [SerializeField] private string gameOverMessage = "我们的游戏就到这里！感谢你的游玩^^";
     [SerializeField] private string returnToMenuMessage = "按ESC回到开始页面";
+    [Header("Completion Feedback")]
+    [SerializeField, Min(0.01f)] private float textDissolveDuration = 0.35f;
+    [SerializeField, Min(0.01f)] private float lightFlightDuration = 0.65f;
+    [SerializeField, Min(0.01f)] private float circlePulseDuration = 0.25f;
+    [SerializeField, Min(0.01f)] private float circleFillDuration = 0.35f;
+    [SerializeField, Range(1f, 1.3f)] private float circlePulseScale = 1.15f;
+    [SerializeField] private Color completionLightColor = new Color(1f, 0.9f, 0.62f, 1f);
     [Header("Readability")]
     [SerializeField] private Text taskHeadingText;
     [SerializeField, Min(1)] private int taskTextSize = 36;
@@ -35,11 +42,44 @@ public class TaskStatusBar : MonoBehaviour
     private int lastTaskIndex = -2;
     private KeyCode lastKey;
     private bool lastFreeStamp;
-    private bool lastStampBlocked;
     private bool lastEndingReady;
-    private float stampBlockedUntil;
     private readonly List<Text> statusLabels = new List<Text>();
     private readonly List<UIInkWellPrompt> inkWellPrompts = new List<UIInkWellPrompt>();
+    private UITaskSceneHint[] taskSceneHints;
+    private bool lastSceneDiary;
+    private Text startPromptText;
+    private TaskCompletionFeedback[] completionEffects;
+    private bool[] completedShown;
+    private RectTransform feedbackLayer;
+    private Canvas feedbackCanvas;
+    private bool lastFeedbackPending;
+
+    public bool HasPendingCompletionFeedback
+    {
+        get
+        {
+            if (completionEffects != null)
+                foreach (var effect in completionEffects) if (effect != null) return true;
+            return false;
+        }
+    }
+
+    public bool SceneHintsEnabled => diaryHintInScene;
+    public BasicBehaviourScript HintPlayer => interactor != null ? interactor.Movement : null;
+    public int ActiveTaskIndex => gameState != null ? CurrentTaskIndex() : -1;
+    public string GetTaskDescription(DemoTaskId task)
+    {
+        int index = (int)task;
+        return index >= 0 && index < taskDescriptions.Count ? taskDescriptions[index] : "";
+    }
+
+    public UITaskSceneHint GetSceneHint(int taskIndex)
+    {
+        if (taskSceneHints == null) return null;
+        foreach (var hint in taskSceneHints)
+            if (hint != null && (int)hint.TaskId == taskIndex) return hint;
+        return null;
+    }
 
     void Awake()
     {
@@ -47,6 +87,7 @@ public class TaskStatusBar : MonoBehaviour
         if (interactor == null) interactor = FindObjectOfType<InteractingHandler>();
         ApplyReadability();
         CreateInkWellPrompts();
+        taskSceneHints = FindObjectsOfType<UITaskSceneHint>(true);
         if (inkMeterPrefab != null && interactor != null)
         {
             Canvas canvas = GetComponentInParent<Canvas>();
@@ -65,7 +106,11 @@ public class TaskStatusBar : MonoBehaviour
             taskDescriptionText.resizeTextMinSize = Mathf.Clamp(taskTextMinSize, 1, taskDescriptionText.fontSize);
             taskDescriptionText.resizeTextMaxSize = taskDescriptionText.fontSize;
         }
+        CreateStartPrompt();
         if (taskStatusImages == null) return;
+        completionEffects = new TaskCompletionFeedback[taskStatusImages.Count];
+        completedShown = new bool[taskStatusImages.Count];
+        CreateFeedbackLayer();
         foreach (Image image in taskStatusImages)
         {
             if (image == null) { statusLabels.Add(null); continue; }
@@ -83,6 +128,46 @@ public class TaskStatusBar : MonoBehaviour
             text.raycastTarget = false;
             statusLabels.Add(text);
         }
+    }
+
+    private void CreateFeedbackLayer()
+    {
+        Canvas parent = GetComponentInParent<Canvas>();
+        if (parent == null) return;
+        feedbackCanvas = parent.rootCanvas;
+        var node = new GameObject("TaskCompletionFeedback", typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
+        node.layer = feedbackCanvas.gameObject.layer;
+        node.transform.SetParent(feedbackCanvas.transform, false);
+        feedbackLayer = node.GetComponent<RectTransform>();
+        feedbackLayer.anchorMin = Vector2.zero;
+        feedbackLayer.anchorMax = Vector2.one;
+        feedbackLayer.offsetMin = feedbackLayer.offsetMax = Vector2.zero;
+        Canvas overlay = node.GetComponent<Canvas>();
+        overlay.overrideSorting = true;
+        overlay.sortingLayerID = feedbackCanvas.sortingLayerID;
+        overlay.sortingOrder = feedbackCanvas.sortingOrder + 20;
+        CanvasGroup group = node.GetComponent<CanvasGroup>();
+        group.interactable = false;
+        group.blocksRaycasts = false;
+    }
+
+    private void CreateStartPrompt()
+    {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null || taskDescriptionText == null) return;
+        startPromptText = Instantiate(taskDescriptionText, canvas.transform, false);
+        startPromptText.name = "GameStartPrompt";
+        startPromptText.text = gameStartMessage;
+        startPromptText.alignment = TextAnchor.MiddleCenter;
+        startPromptText.raycastTarget = false;
+        RectTransform rect = startPromptText.rectTransform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.85f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition3D = Vector3.zero;
+        rect.localRotation = Quaternion.identity;
+        rect.localScale = Vector3.one;
+        rect.sizeDelta = new Vector2(640f, 100f);
+        startPromptText.gameObject.SetActive(gameState != null && gameState.Phase == GameSessionPhase.Waiting);
     }
 
     private void CreateInkWellPrompts()
@@ -167,28 +252,94 @@ public class TaskStatusBar : MonoBehaviour
     void OnEnable()
     {
         if (gameState != null) gameState.OnTaskStateChanged += RefreshStatus;
-        if (interactor != null && interactor.Stamping != null) interactor.Stamping.OnPlacementRejected += HandleStampRejected;
         RefreshStatus(-1);
         lastPhase = (GameSessionPhase)(-1);
         foreach (UIInkWellPrompt prompt in inkWellPrompts)
             if (prompt != null) prompt.enabled = true;
     }
 
-    private void HandleStampRejected() { stampBlockedUntil = Time.unscaledTime + 1.1f; }
-
-    private void RefreshStatus(int ignored)
+    private void RefreshStatus(int changedIndex)
     {
         if (gameState == null || taskStatusImages == null) return;
         for (int i = 0; i < taskStatusImages.Count; i++)
         {
             bool complete = i < gameState.taskCompleted.Count && gameState.taskCompleted[i];
-            if (taskStatusImages[i] != null) taskStatusImages[i].color = complete ? completedColor : incompleteColor;
-            if (i < statusLabels.Count && statusLabels[i] != null) statusLabels[i].text = complete ? "OK" : (i + 1).ToString();
+            if (completionEffects != null && i < completionEffects.Length)
+            {
+                if (!complete && completionEffects[i] != null)
+                {
+                    completionEffects[i].Dispose();
+                    completionEffects[i] = null;
+                }
+                if (complete && completionEffects[i] != null) continue;
+                bool animate = complete && i == changedIndex && !completedShown[i]
+                    && feedbackLayer != null && taskStatusImages[i] != null && taskStatusImages[i].isActiveAndEnabled;
+                completedShown[i] = complete;
+                if (animate)
+                {
+                    Color from = incompleteColor;
+                    from.a = Mathf.Clamp01(incompleteOpacity);
+                    Color to = completedColor;
+                    to.a = 1f;
+                    completionEffects[i] = new TaskCompletionFeedback(SceneHintsEnabled ? GetSceneHint(i) : null,
+                        taskStatusImages[i], i < statusLabels.Count ? statusLabels[i] : null, feedbackLayer, feedbackCanvas,
+                        from, to, completionLightColor, textDissolveDuration, lightFlightDuration,
+                        circlePulseDuration, circleFillDuration, circlePulseScale);
+                    continue;
+                }
+            }
+            SetStatusVisual(i, complete);
         }
+        if (interactor != null) interactor.SetCompletionFeedbackPending(HasPendingCompletionFeedback);
+    }
+
+    private void SetStatusVisual(int index, bool complete)
+    {
+        if (taskStatusImages == null || index < 0 || index >= taskStatusImages.Count) return;
+        Color color = complete ? completedColor : incompleteColor;
+        color.a = complete ? 1f : Mathf.Clamp01(incompleteOpacity);
+        if (taskStatusImages[index] != null) taskStatusImages[index].color = color;
+        if (index < statusLabels.Count && statusLabels[index] != null)
+        {
+            statusLabels[index].text = complete ? "OK" : "";
+            Color labelColor = statusLabels[index].color;
+            labelColor.a = 1f;
+            statusLabels[index].color = labelColor;
+        }
+    }
+
+    private void TickCompletionFeedback()
+    {
+        if (completionEffects == null) return;
+        for (int i = 0; i < completionEffects.Length; i++)
+        {
+            var effect = completionEffects[i];
+            if (effect == null) continue;
+            effect.Tick(Time.unscaledDeltaTime);
+            if (!effect.IsComplete) continue;
+            effect.Dispose();
+            completionEffects[i] = null;
+            SetStatusVisual(i, gameState != null && i < gameState.taskCompleted.Count && gameState.taskCompleted[i]);
+        }
+        if (interactor != null) interactor.SetCompletionFeedbackPending(HasPendingCompletionFeedback);
+    }
+
+    private void ClearCompletionFeedback()
+    {
+        if (completionEffects != null)
+            for (int i = 0; i < completionEffects.Length; i++)
+            {
+                if (completionEffects[i] == null) continue;
+                completionEffects[i].Dispose();
+                completionEffects[i] = null;
+                SetStatusVisual(i, gameState != null && i < gameState.taskCompleted.Count && gameState.taskCompleted[i]);
+            }
+        if (interactor != null) interactor.SetCompletionFeedbackPending(false);
     }
 
     void LateUpdate()
     {
+        TickCompletionFeedback();
         if (gameState == null) return;
         GameSessionPhase phase = gameState.Phase;
         InteractionTarget target = interactor != null ? interactor.CurrentTarget : null;
@@ -196,33 +347,40 @@ public class TaskStatusBar : MonoBehaviour
         int taskIndex = CurrentTaskIndex();
         KeyCode key = interactor != null ? interactor.InteractionKey : KeyCode.E;
         bool freeStamp = target == null && interactor != null && interactor.Stamping != null && interactor.Stamping.CanOfferStamp;
-        bool stampBlocked = freeStamp && Time.unscaledTime < stampBlockedUntil;
         bool endingReady = phase == GameSessionPhase.Finished && interactor != null && interactor.CanReturnToMenu;
+        bool feedbackPending = HasPendingCompletionFeedback;
+        UITaskSceneHint sceneHint = GetSceneHint(taskIndex);
+        bool sceneDiary = phase == GameSessionPhase.Playing && diaryHintInScene
+            && sceneHint != null && sceneHint.IsReady && Camera.main != null;
         if (phase == lastPhase && target == lastTarget && taskIndex == lastTaskIndex && key == lastKey && freeStamp == lastFreeStamp
-            && stampBlocked == lastStampBlocked && endingReady == lastEndingReady) return;
+            && endingReady == lastEndingReady && sceneDiary == lastSceneDiary && feedbackPending == lastFeedbackPending) return;
         lastPhase = phase;
         lastTarget = target;
         lastTaskIndex = taskIndex;
         lastKey = key;
         lastFreeStamp = freeStamp;
-        lastStampBlocked = stampBlocked;
         lastEndingReady = endingReady;
+        lastSceneDiary = sceneDiary;
+        lastFeedbackPending = feedbackPending;
         string description = "";
         string prompt = "";
-        if (phase == GameSessionPhase.Waiting) description = gameStartMessage;
+        if (startPromptText != null) startPromptText.gameObject.SetActive(phase == GameSessionPhase.Waiting);
+        if (phase == GameSessionPhase.Waiting)
+        {
+            if (startPromptText != null) startPromptText.text = gameStartMessage;
+            else description = gameStartMessage;
+        }
         else if (phase == GameSessionPhase.Finished)
         {
-            description = gameOverMessage;
-            if (endingReady) prompt = returnToMenuMessage;
+            if (!feedbackPending) description = gameOverMessage;
+            if (endingReady && !feedbackPending) prompt = returnToMenuMessage;
         }
         else
         {
-            if (taskIndex >= 0 && taskIndex < taskDescriptions.Count)
+            if (!sceneDiary && taskIndex >= 0 && taskIndex < taskDescriptions.Count)
                 description = taskDescriptions[taskIndex];
-            if (target != null && !(target is InkWell))
-                prompt = (target is EdgeFalling ? edgeMessage : interactionMessage)
-                    .Replace(" E ", " " + key + " ");
-            else if (freeStamp) prompt = stampBlocked ? stampBlockedMessage : freeStampMessage.Replace(" E ", " " + key + " ");
+            if ((target != null && !(target is InkWell)) || freeStamp)
+                prompt = target is EdgeFalling ? "按 " + key + " 跳下" : key.ToString();
         }
         if (taskDescriptionText != null) taskDescriptionText.text = description;
         if (interactionPromptText != null) interactionPromptText.text = prompt;
@@ -237,15 +395,18 @@ public class TaskStatusBar : MonoBehaviour
 
     void OnDisable()
     {
+        ClearCompletionFeedback();
+        if (startPromptText != null) startPromptText.gameObject.SetActive(false);
         if (gameState != null) gameState.OnTaskStateChanged -= RefreshStatus;
-        if (interactor != null && interactor.Stamping != null) interactor.Stamping.OnPlacementRejected -= HandleStampRejected;
-        stampBlockedUntil = 0f;
         foreach (UIInkWellPrompt prompt in inkWellPrompts)
             if (prompt != null) prompt.enabled = false;
     }
 
     void OnDestroy()
     {
+        ClearCompletionFeedback();
+        if (feedbackLayer != null) Destroy(feedbackLayer.gameObject);
+        if (startPromptText != null) Destroy(startPromptText.gameObject);
         foreach (UIInkWellPrompt prompt in inkWellPrompts)
             if (prompt != null) Destroy(prompt.gameObject);
         inkWellPrompts.Clear();

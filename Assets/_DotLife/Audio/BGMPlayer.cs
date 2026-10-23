@@ -62,6 +62,17 @@ public class BGMPlayer : MonoBehaviour
 
     void StartPlay()
     {
+        if (audioSource.isPlaying)
+        {
+            isPlaying = true;
+            UpdateUI();
+            return;
+        }
+        if (audioSource.clip != null)
+        {
+            Play();
+            return;
+        }
         PlayTrack(currentTrackIndex);
     }
 
